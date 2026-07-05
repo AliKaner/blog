@@ -41,6 +41,49 @@ export function PixelPetEditor() {
   const setFrame = activeFrame === 1 ? setFrame1 : setFrame2;
   const size = GRID_SIZE * EDITOR_PIXEL_SIZE;
 
+  const MAX_HISTORY = 50;
+  const historyRef = useRef<{
+    1: (string | null)[][];
+    2: (string | null)[][];
+  }>({ 1: [], 2: [] });
+
+  // Kept in sync after every render (not during) so the keydown handler
+  // below always reads the current frame without needing to resubscribe.
+  const activeFrameRef = useRef(activeFrame);
+  const setFrameRef = useRef(setFrame);
+  useEffect(() => {
+    activeFrameRef.current = activeFrame;
+    setFrameRef.current = setFrame;
+  });
+
+  function pushHistory(frameNum: 1 | 2, snapshot: (string | null)[]) {
+    const hist = historyRef.current[frameNum];
+    hist.push(snapshot);
+    if (hist.length > MAX_HISTORY) hist.shift();
+  }
+
+  function undo() {
+    const current = activeFrameRef.current;
+    const hist = historyRef.current[current];
+    const prev = hist.pop();
+    if (prev) setFrameRef.current(prev);
+  }
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      const isEditable =
+        target?.tagName === "INPUT" || target?.tagName === "TEXTAREA";
+      if (isEditable) return;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        undo();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -94,6 +137,7 @@ export function PixelPetEditor() {
 
   function handlePointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
     paintingRef.current = true;
+    pushHistory(activeFrame, frame);
     paintAt(e.clientX, e.clientY);
   }
   function handlePointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
@@ -171,13 +215,24 @@ export function PixelPetEditor() {
             {activeFrame === 2 && (
               <button
                 type="button"
-                onClick={() => setFrame2([...frame1])}
+                onClick={() => {
+                  pushHistory(2, frame2);
+                  setFrame2([...frame1]);
+                }}
                 className="btn px-2 py-1 text-xs"
                 title="Copy Frame 1 into Frame 2 as a starting point"
               >
                 Copy Frame 1 →
               </button>
             )}
+            <button
+              type="button"
+              onClick={undo}
+              className="btn px-2 py-1 text-xs"
+              title="Undo (Ctrl+Z)"
+            >
+              ↺ Undo
+            </button>
           </div>
         </div>
 
@@ -200,19 +255,24 @@ export function PixelPetEditor() {
                   }}
                 />
               ))}
-              <button
-                type="button"
-                onClick={() => setColor(null)}
-                className="flex h-7 w-7 items-center justify-center rounded-sm border-2 bg-paper text-xs text-ink-soft"
-                style={{
-                  borderColor: color === null ? "var(--accent)" : "var(--border)",
-                }}
-                title="Eraser"
-              >
-                ×
-              </button>
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setColor(null)}
+            className={`flex w-fit items-center gap-1.5 rounded-sm border-2 px-2 py-1 text-xs ${
+              color === null ? "text-accent" : "text-ink-soft"
+            }`}
+            style={{
+              borderColor: color === null ? "var(--accent)" : "var(--border)",
+              background:
+                "repeating-conic-gradient(#2a2740 0% 25%, #1a1826 0% 50%) 0 / 8px 8px",
+            }}
+            title="Eraser — paint with no color"
+          >
+            Eraser
+          </button>
 
           <label className="block">
             <span className="block font-mono text-xs uppercase tracking-wide text-ink-soft">
