@@ -13,7 +13,13 @@ type FeedItem = {
   rating?: number | null;
 };
 
-export function JourneyTimeline({ items }: { items: FeedItem[] }) {
+export function JourneyTimeline({
+  items,
+  variant = "line",
+}: {
+  items: FeedItem[];
+  variant?: "line" | "plain";
+}) {
   if (items.length === 0) return null;
 
   // Multiple entries can land on the same day — group them under one
@@ -29,32 +35,40 @@ export function JourneyTimeline({ items }: { items: FeedItem[] }) {
     }
   }
 
-  return (
-    <div className="relative">
-      <div className="absolute left-[5px] top-2 bottom-2 w-px bg-border" />
-      <div className="flex flex-col gap-8">
-        {groups.map((group) => (
-          <div key={group.key} className="relative pl-6">
+  const groupList = (
+    <div className="flex flex-col gap-8">
+      {groups.map((group) => (
+        <div key={group.key} className={variant === "line" ? "relative pl-6" : ""}>
+          {variant === "line" && (
             <div
               className="absolute left-0 top-1.5 h-[11px] w-[11px] rounded-full border-2"
               style={{ borderColor: "var(--accent)", background: "var(--paper)" }}
             />
-            <p className="font-mono text-xs uppercase tracking-wide text-accent">
-              {formatDate(group.date)}
-              {group.items.length > 1 && (
-                <span className="ml-2 text-ink-soft">
-                  · {group.items.length} things
-                </span>
-              )}
-            </p>
-            <div className="mt-2 flex flex-col gap-3">
-              {group.items.map((item) => (
-                <FeedCard key={`${item.type}-${item.id}`} {...item} />
-              ))}
-            </div>
+          )}
+          <p className="font-mono text-xs uppercase tracking-wide text-accent">
+            {formatDate(group.date)}
+            {group.items.length > 1 && (
+              <span className="ml-2 text-ink-soft">
+                · {group.items.length} things
+              </span>
+            )}
+          </p>
+          <div className="mt-2 flex flex-col gap-3">
+            {group.items.map((item) => (
+              <FeedCard key={`${item.type}-${item.id}`} {...item} />
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  if (variant === "plain") return groupList;
+
+  return (
+    <div className="relative">
+      <div className="absolute left-[5px] top-2 bottom-2 w-px bg-border" />
+      {groupList}
     </div>
   );
 }

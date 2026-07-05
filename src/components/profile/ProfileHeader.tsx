@@ -23,7 +23,7 @@ export function ProfileHeader({ profile }: { profile: ProfileData | null }) {
   const links = LINKS.filter((l) => profile[l.key]);
 
   return (
-    <div className="flex flex-col gap-3 border-b border-border pb-8">
+    <div className="flex flex-col gap-3">
       <div>
         <h1 className="font-heading text-3xl text-ink">{profile.name}</h1>
         {profile.title && (
