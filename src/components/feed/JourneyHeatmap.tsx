@@ -1,32 +1,23 @@
-import { dayKey, formatDate } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 
 const START_YEAR = 2018;
-const CELL = 10;
-const GAP = 2;
+const CELL = 12;
+const GAP = 3;
+const WEEK_MS = 7 * 86_400_000;
 
-type Cell = { date: Date; key: string; count: number } | null;
+function startOfWeek(timestamp: number): number {
+  const d = new Date(timestamp);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - d.getDay());
+  return d.getTime();
+}
 
-function buildYearWeeks(year: number, counts: Map<string, number>): Cell[][] {
-  const jan1 = new Date(year, 0, 1);
-  const dec31 = new Date(year, 11, 31);
-  const startPad = jan1.getDay();
-  const totalDays =
-    Math.round((dec31.getTime() - jan1.getTime()) / 86_400_000) + 1;
-
-  const cells: Cell[] = [];
-  for (let i = 0; i < startPad; i++) cells.push(null);
-  for (let d = 0; d < totalDays; d++) {
-    const date = new Date(year, 0, 1 + d);
-    const key = dayKey(date.getTime());
-    cells.push({ date, key, count: counts.get(key) ?? 0 });
-  }
-  while (cells.length % 7 !== 0) cells.push(null);
-
-  const weeks: Cell[][] = [];
-  for (let i = 0; i < cells.length; i += 7) {
-    weeks.push(cells.slice(i, i + 7));
-  }
-  return weeks;
+function weekYear(weekStart: number): number {
+  // A week spanning a year boundary is attributed to whichever year
+  // contains its Thursday (the same convention ISO week numbers use),
+  // so a week that's mostly December doesn't get labeled with the
+  // following year just because it starts a day or two early.
+  return new Date(weekStart + 4 * 86_400_000).getFullYear();
 }
 
 function cellColor(count: number): string {
@@ -36,95 +27,61 @@ function cellColor(count: number): string {
   return "var(--accent)";
 }
 
-function YearGrid({
-  year,
-  counts,
+export function JourneyHeatmap({
+  items,
+  now,
 }: {
-  year: number;
-  counts: Map<string, number>;
+  items: { date: number }[];
+  now: number;
 }) {
-  const weeks = buildYearWeeks(year, counts);
-  const monthLabels: { col: number; label: string }[] = [];
-  weeks.forEach((week, col) => {
-    const firstOfMonth = week.find((c) => c && c.date.getDate() === 1);
-    if (firstOfMonth) {
-      monthLabels.push({
-        col,
-        label: firstOfMonth.date.toLocaleDateString("en-US", {
-          month: "short",
-        }),
-      });
-    }
-  });
-
-  const total = weeks.flat().reduce((sum, c) => sum + (c?.count ?? 0), 0);
-
-  return (
-    <div>
-      <div className="flex items-baseline gap-2">
-        <span className="font-heading text-lg text-ink">{year}</span>
-        <span className="font-mono text-xs text-ink-soft">
-          {total} thing{total === 1 ? "" : "s"}
-        </span>
-      </div>
-      <div className="mt-2 overflow-x-auto">
-        <div
-          className="relative"
-          style={{ height: 14, width: weeks.length * (CELL + GAP) }}
-        >
-          {monthLabels.map((m) => (
-            <span
-              key={m.col}
-              className="absolute font-mono text-[10px] text-ink-soft"
-              style={{ left: m.col * (CELL + GAP) }}
-            >
-              {m.label}
-            </span>
-          ))}
-        </div>
-        <div className="mt-1 flex" style={{ gap: GAP }}>
-          {weeks.map((week, col) => (
-            <div key={col} className="flex flex-col" style={{ gap: GAP }}>
-              {week.map((cell, row) => (
-                <div
-                  key={row}
-                  title={
-                    cell
-                      ? `${formatDate(cell.date.getTime())} · ${cell.count} thing${cell.count === 1 ? "" : "s"}`
-                      : undefined
-                  }
-                  style={{
-                    height: CELL,
-                    width: CELL,
-                    borderRadius: 2,
-                    background: cell ? cellColor(cell.count) : "transparent",
-                  }}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function JourneyHeatmap({ items }: { items: { date: number }[] }) {
-  const counts = new Map<string, number>();
+  const counts = new Map<number, number>();
   for (const item of items) {
-    const key = dayKey(item.date);
+    const key = startOfWeek(item.date);
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
 
-  const currentYear = new Date().getFullYear();
-  const years: number[] = [];
-  for (let y = currentYear; y >= START_YEAR; y--) years.push(y);
+  const firstWeek = startOfWeek(new Date(START_YEAR, 0, 1).getTime());
+  const lastWeek = startOfWeek(now);
+
+  const weeks: { start: number; count: number }[] = [];
+  for (let t = firstWeek; t <= lastWeek; t += WEEK_MS) {
+    weeks.push({ start: t, count: counts.get(t) ?? 0 });
+  }
+
+  const total = weeks.reduce((sum, w) => sum + w.count, 0);
 
   return (
-    <div className="flex flex-col gap-6">
-      {years.map((year) => (
-        <YearGrid key={year} year={year} counts={counts} />
-      ))}
+    <div>
+      <p className="font-mono text-xs text-ink-soft">
+        {total} thing{total === 1 ? "" : "s"} since {START_YEAR}, one square
+        per week
+      </p>
+      <div className="mt-3 flex flex-wrap" style={{ gap: GAP }}>
+        {weeks.map((week, i) => {
+          const year = weekYear(week.start);
+          const isFirstOfYear =
+            i === 0 || weekYear(weeks[i - 1].start) !== year;
+          const weekEnd = week.start + WEEK_MS - 86_400_000;
+          return (
+            <div key={week.start} className="contents">
+              {isFirstOfYear && (
+                <span className="mt-2 basis-full font-mono text-xs text-ink-soft first:mt-0">
+                  {year}
+                </span>
+              )}
+              <div
+                title={`Week of ${formatDate(week.start)}–${formatDate(weekEnd)} · ${week.count} thing${week.count === 1 ? "" : "s"}`}
+                style={{
+                  height: CELL,
+                  width: CELL,
+                  borderRadius: 2,
+                  background: cellColor(week.count),
+                }}
+              />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

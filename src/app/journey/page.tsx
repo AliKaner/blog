@@ -3,8 +3,13 @@ import { api } from "../../../convex/_generated/api";
 import { JourneyHeatmap } from "@/components/feed/JourneyHeatmap";
 import { JourneyTimeline } from "@/components/feed/JourneyTimeline";
 
+function currentTimestamp() {
+  return Date.now();
+}
+
 export default async function JourneyPage() {
   const feed = await fetchQuery(api.feed.getFeed, {});
+  const now = currentTimestamp();
 
   return (
     <div>
@@ -21,7 +26,7 @@ export default async function JourneyPage() {
       ) : (
         <>
           <div className="mt-8 overflow-x-auto border-b border-border pb-8">
-            <JourneyHeatmap items={feed} />
+            <JourneyHeatmap items={feed} now={now} />
           </div>
           <div className="mt-8">
             <JourneyTimeline items={feed} variant="plain" />
