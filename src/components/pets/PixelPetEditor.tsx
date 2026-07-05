@@ -149,7 +149,7 @@ export function PixelPetEditor() {
             onPointerUp={stopPainting}
             onPointerLeave={stopPainting}
           />
-          <div className="mt-2 flex gap-2">
+          <div className="mt-2 flex items-center gap-2">
             {([1, 2] as const).map((n) => (
               <button
                 key={n}
@@ -168,6 +168,16 @@ export function PixelPetEditor() {
                 </span>
               </button>
             ))}
+            {activeFrame === 2 && (
+              <button
+                type="button"
+                onClick={() => setFrame2([...frame1])}
+                className="btn px-2 py-1 text-xs"
+                title="Copy Frame 1 into Frame 2 as a starting point"
+              >
+                Copy Frame 1 →
+              </button>
+            )}
           </div>
         </div>
 
