@@ -14,6 +14,7 @@ import { AdminLoginModal } from "@/components/admin/AdminLoginModal";
 import { GrainOverlay } from "@/components/texture/GrainOverlay";
 import { SiteNav } from "@/components/nav/SiteNav";
 import { PetStrip } from "@/components/pets/PetStrip";
+import { FaviconCycler } from "@/components/FaviconCycler";
 
 const novaCut = Nova_Cut({
   variable: "--font-nova-cut",
@@ -72,6 +73,7 @@ export default function RootLayout({
           </AdminSessionProvider>
         </ConvexClientProvider>
         <GrainOverlay />
+        <FaviconCycler />
       </body>
     </html>
   );
