@@ -86,4 +86,58 @@ export default defineSchema({
     lastFedAt: v.number(),
     totalFeeds: v.number(),
   }).index("by_kind", ["kind"]),
+
+  profile: defineTable({
+    name: v.string(),
+    title: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    linkedinUrl: v.optional(v.string()),
+    githubUrl: v.optional(v.string()),
+    letterboxdUrl: v.optional(v.string()),
+    tiktokUrl: v.optional(v.string()),
+    mediumUrl: v.optional(v.string()),
+    updatedAt: v.number(),
+  }),
+
+  resumeItems: defineTable({
+    kind: v.union(v.literal("experience"), v.literal("education")),
+    title: v.string(),
+    organization: v.string(),
+    startDate: v.number(),
+    endDate: v.optional(v.number()),
+    description: v.optional(v.string()),
+    order: v.number(),
+    published: v.boolean(),
+    url: v.optional(v.string()),
+    logoStorageId: v.optional(v.id("_storage")),
+    stack: v.optional(v.array(v.string())),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_kind_order", ["kind", "order"]),
+
+  projects: defineTable({
+    title: v.string(),
+    slug: v.string(),
+    description: v.optional(v.string()),
+    imageStorageIds: v.optional(v.array(v.id("_storage"))),
+    url: v.optional(v.string()),
+    order: v.number(),
+    published: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_order", ["order"])
+    .index("by_slug", ["slug"]),
+
+  customPets: defineTable({
+    name: v.string(),
+    frame1: v.array(v.union(v.string(), v.null())),
+    frame2: v.array(v.union(v.string(), v.null())),
+    hunger: v.number(),
+    happiness: v.number(),
+    lastFedAt: v.number(),
+    totalFeeds: v.number(),
+    published: v.boolean(),
+    createdAt: v.number(),
+  }).index("by_published", ["published"]),
 });

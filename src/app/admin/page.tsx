@@ -4,11 +4,15 @@ import Link from "next/link";
 import { useAdminSession } from "@/components/providers/AdminSessionProvider";
 
 const SECTIONS = [
+  { href: "/admin/profile", label: "Profile" },
+  { href: "/admin/resume", label: "Experience & Education" },
+  { href: "/admin/projects", label: "Projects" },
   { href: "/admin/movies", label: "Movies" },
   { href: "/admin/places", label: "Places" },
   { href: "/admin/books", label: "Books" },
   { href: "/admin/dev-log", label: "Dev Log" },
   { href: "/admin/posts", label: "Posts" },
+  { href: "/admin/custom-pets", label: "Custom Pets" },
 ];
 
 export default function AdminDashboardPage() {

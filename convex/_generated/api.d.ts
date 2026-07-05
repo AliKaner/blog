@@ -10,6 +10,7 @@
 
 import type * as adminSessions from "../adminSessions.js";
 import type * as books from "../books.js";
+import type * as customPets from "../customPets.js";
 import type * as feed from "../feed.js";
 import type * as files from "../files.js";
 import type * as lib_requireAdmin from "../lib/requireAdmin.js";
@@ -17,6 +18,9 @@ import type * as movies from "../movies.js";
 import type * as pets from "../pets.js";
 import type * as places from "../places.js";
 import type * as posts from "../posts.js";
+import type * as profile from "../profile.js";
+import type * as projects from "../projects.js";
+import type * as resumeItems from "../resumeItems.js";
 import type * as softwareLogs from "../softwareLogs.js";
 
 import type {
@@ -28,6 +32,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   adminSessions: typeof adminSessions;
   books: typeof books;
+  customPets: typeof customPets;
   feed: typeof feed;
   files: typeof files;
   "lib/requireAdmin": typeof lib_requireAdmin;
@@ -35,6 +40,9 @@ declare const fullApi: ApiFromModules<{
   pets: typeof pets;
   places: typeof places;
   posts: typeof posts;
+  profile: typeof profile;
+  projects: typeof projects;
+  resumeItems: typeof resumeItems;
   softwareLogs: typeof softwareLogs;
 }>;
 

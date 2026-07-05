@@ -14,7 +14,7 @@ export function SiteNav() {
   return (
     <header className="border-b border-border">
       <nav className="mx-auto flex max-w-3xl flex-wrap items-baseline gap-x-5 gap-y-2 px-6 py-5">
-        <Link href="/" className="font-heading text-lg font-semibold text-ink no-underline">
+        <Link href="/" className="font-brand text-xl text-accent no-underline">
           alikaner
         </Link>
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">

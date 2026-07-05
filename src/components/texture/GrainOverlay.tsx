@@ -17,8 +17,8 @@ export function GrainOverlay() {
         backgroundImage: GRAIN_DATA_URI,
         backgroundRepeat: "repeat",
         backgroundSize: "180px 180px",
-        opacity: 0.055,
-        mixBlendMode: "multiply",
+        opacity: 0.09,
+        mixBlendMode: "overlay",
       }}
     />
   );

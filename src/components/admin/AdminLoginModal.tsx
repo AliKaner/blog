@@ -23,7 +23,7 @@ export function AdminLoginModal() {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/40 px-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 px-4"
       onClick={closeLogin}
     >
       <form
