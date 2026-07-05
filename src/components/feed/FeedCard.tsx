@@ -25,7 +25,7 @@ export function FeedCard({
   return (
     <Link
       href={href}
-      className="flex gap-4 rounded-sm border border-border bg-card p-4 no-underline transition hover:border-accent"
+      className="panel flex gap-4 p-4 no-underline"
     >
       {imageUrl && (
         // eslint-disable-next-line @next/next/no-img-element

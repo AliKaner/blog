@@ -121,7 +121,7 @@ export function PixelPetEditor() {
 
   if (submitted) {
     return (
-      <div className="rounded-sm border border-border bg-card p-6 text-center">
+      <div className="panel p-6 text-center">
         <p className="text-ink">
           Thanks — <span className="text-accent">{name}</span> is waiting for
           approval. It will join the yard once approved, and you can already
@@ -134,7 +134,7 @@ export function PixelPetEditor() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 rounded-sm border border-border bg-card p-6"
+      className="panel flex flex-col gap-4 p-6"
     >
       <div className="flex flex-wrap items-start gap-6">
         <div>
@@ -163,7 +163,7 @@ export function PixelPetEditor() {
                   frame={n === 1 ? frame1 : frame2}
                   pixelSize={1.5}
                 />
-                <span className="font-label text-[10px] text-ink-soft">
+                <span className="font-mono text-[10px] text-ink-soft">
                   Frame {n}
                 </span>
               </button>
@@ -221,7 +221,7 @@ export function PixelPetEditor() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-fit rounded-sm bg-accent px-4 py-2 text-sm text-paper disabled:opacity-50"
+            className="btn w-fit px-4 py-2 text-sm disabled:opacity-50"
           >
             {submitting ? "Submitting…" : "Submit for approval"}
           </button>

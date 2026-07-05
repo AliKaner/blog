@@ -28,7 +28,7 @@ export default function AdminCustomPetsPage() {
         {pets.map((pet) => (
           <div
             key={pet._id}
-            className="flex items-center justify-between rounded-sm border border-border bg-card px-4 py-3"
+            className="panel-sm flex items-center justify-between px-4 py-3"
           >
             <div className="flex items-center gap-4">
               <div className="flex gap-2">

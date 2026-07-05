@@ -31,7 +31,7 @@ export default function AdminDashboardPage() {
           <Link
             key={s.href}
             href={s.href}
-            className="rounded-sm border border-border bg-card px-4 py-6 text-center font-heading text-lg text-ink no-underline hover:border-accent"
+            className="panel px-4 py-6 text-center font-heading text-lg text-ink no-underline"
           >
             {s.label}
           </Link>

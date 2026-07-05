@@ -102,7 +102,7 @@ export default function AdminMoviesPage() {
             setFormError(null);
             setEditingId("new");
           }}
-          className="rounded-sm bg-accent px-3 py-1.5 text-sm text-paper"
+          className="btn px-3 py-1.5 text-sm"
         >
           New Movie
         </button>
@@ -111,7 +111,7 @@ export default function AdminMoviesPage() {
         {movies.map((m) => (
           <div
             key={m._id}
-            className="flex items-center justify-between rounded-sm border border-border bg-card px-4 py-3"
+            className="panel-sm flex items-center justify-between px-4 py-3"
           >
             <div>
               <p className="text-ink">

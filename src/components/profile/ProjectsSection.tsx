@@ -17,7 +17,7 @@ export function ProjectsSection({ projects }: { projects: Project[] }) {
         {projects.map((project) => {
           const coverUrl = project.imageUrls?.[0];
           const card = (
-            <div className="flex h-full flex-col overflow-hidden rounded-sm border border-border bg-card transition hover:border-accent">
+            <div className="panel flex h-full flex-col">
               {coverUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -34,7 +34,7 @@ export function ProjectsSection({ projects }: { projects: Project[] }) {
                   </p>
                 )}
                 {project.url && (
-                  <span className="mt-1 font-label text-xs text-accent">
+                  <span className="mt-1 font-mono text-xs text-accent">
                     Visit ↗
                   </span>
                 )}

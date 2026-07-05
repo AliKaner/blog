@@ -12,6 +12,7 @@ import { AdminSessionProvider } from "@/components/providers/AdminSessionProvide
 import { KonamiListener } from "@/components/admin/KonamiListener";
 import { AdminLoginModal } from "@/components/admin/AdminLoginModal";
 import { GrainOverlay } from "@/components/texture/GrainOverlay";
+import { ParticleOverlay } from "@/components/texture/ParticleOverlay";
 import { SiteNav } from "@/components/nav/SiteNav";
 import { PetStrip } from "@/components/pets/PetStrip";
 import { FaviconCycler } from "@/components/FaviconCycler";
@@ -72,6 +73,7 @@ export default function RootLayout({
             <PetStrip />
           </AdminSessionProvider>
         </ConvexClientProvider>
+        <ParticleOverlay />
         <GrainOverlay />
         <FaviconCycler />
       </body>

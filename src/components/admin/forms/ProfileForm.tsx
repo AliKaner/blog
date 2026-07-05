@@ -131,7 +131,7 @@ export function ProfileForm({
       <button
         type="submit"
         disabled={submitting}
-        className="w-fit rounded-sm bg-accent px-4 py-2 text-sm text-paper disabled:opacity-50"
+        className="btn w-fit px-4 py-2 text-sm disabled:opacity-50"
       >
         {submitting ? "Saving…" : "Save"}
       </button>

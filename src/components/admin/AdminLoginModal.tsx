@@ -29,7 +29,7 @@ export function AdminLoginModal() {
       <form
         onClick={(e) => e.stopPropagation()}
         onSubmit={handleSubmit}
-        className="w-full max-w-xs rounded-sm border border-border bg-card p-6 shadow-lg"
+        className="panel w-full max-w-xs p-6"
       >
         <h2 className="font-heading text-lg text-ink">Admin</h2>
         <p className="mt-1 text-sm text-ink-soft">Enter the password.</p>
@@ -38,7 +38,7 @@ export function AdminLoginModal() {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-4 w-full rounded-sm border border-border bg-paper px-3 py-2 text-ink outline-none focus:border-accent"
+          className="input mt-4"
         />
         {loginError && (
           <p className="mt-2 text-sm text-accent">{loginError}</p>
@@ -54,7 +54,7 @@ export function AdminLoginModal() {
           <button
             type="submit"
             disabled={submitting || !password}
-            className="rounded-sm bg-accent px-3 py-1.5 text-paper disabled:opacity-50"
+            className="btn px-3 py-1.5 disabled:opacity-50"
           >
             {submitting ? "Checking…" : "Enter"}
           </button>

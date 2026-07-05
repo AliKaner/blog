@@ -336,11 +336,12 @@ export function PetYard() {
       <div
         ref={yardRef}
         onClick={handleYardClick}
-        className="relative h-[320px] w-full cursor-crosshair overflow-hidden rounded-sm border border-border"
+        className="relative h-[320px] w-full cursor-crosshair overflow-hidden border border-border"
         style={{
           backgroundColor: "#0e0d1a",
           backgroundImage:
             "repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 2px, transparent 2px 4px)",
+          boxShadow: "6px 6px 0 0 var(--accent)",
         }}
       >
         {foods.map((food) => (
@@ -396,12 +397,12 @@ export function PetYard() {
         {allPets.map((pet) => (
           <div
             key={pet._id}
-            className="rounded-sm border border-border bg-card p-3"
+            className="panel-sm p-3"
           >
             <p className="font-heading text-ink">
               {pet.name}
               {pet.origin === "custom" && !pet.published && (
-                <span className="ml-2 font-label text-xs text-accent-2">
+                <span className="ml-2 font-mono text-xs text-accent-2">
                   pending
                 </span>
               )}

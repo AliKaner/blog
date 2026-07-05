@@ -1,13 +1,23 @@
 @import "tailwindcss";
 
+@keyframes particle-drift {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 300px 300px;
+  }
+}
+
 :root {
-  --paper: #0a0a12;
-  --ink: #f4f2fb;
-  --ink-soft: #9d97c2;
-  --card: #14131f;
-  --border: #2c2a42;
-  --accent: #ff2bd6;
-  --accent-2: #21e6ff;
+  --paper: #0b0910;
+  --ink: #f5f3fa;
+  --ink-soft: #9c93b8;
+  --card: #161320;
+  --border: #221536;
+  --accent: #7a14d9;
+  --accent-2: #6e00e0;
 }
 
 @theme inline {
@@ -52,7 +62,7 @@ a {
   line-height: 1.75;
 }
 
-.prose-blog > * + * {
+.prose-blog>*+* {
   margin-top: 1.1em;
 }
 
@@ -109,17 +119,81 @@ a {
   padding: 0;
 }
 
+/* Angular "panel" surface: cut corners instead of rounded ones, plus a hard
+   offset shadow so the block reads as physically popped off the page. */
+.panel {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  clip-path: polygon(14px 0%,
+      100% 0%,
+      100% calc(100% - 14px),
+      calc(100% - 14px) 100%,
+      0% 100%,
+      0% 14px);
+  box-shadow: 6px 6px 0 0 var(--accent);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.panel:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 0 var(--accent);
+}
+
+.panel-sm {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  clip-path: polygon(8px 0%,
+      100% 0%,
+      100% calc(100% - 8px),
+      calc(100% - 8px) 100%,
+      0% 100%,
+      0% 8px);
+  box-shadow: 3px 3px 0 0 var(--accent-2);
+}
+
+.btn {
+  position: relative;
+  background: var(--accent);
+  color: var(--paper);
+  border: 1px solid var(--accent);
+  clip-path: polygon(8px 0%,
+      100% 0%,
+      100% calc(100% - 8px),
+      calc(100% - 8px) 100%,
+      0% 100%,
+      0% 8px);
+  box-shadow: 4px 4px 0 0 var(--accent-2);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 0 var(--accent-2);
+}
+
+.btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 0 var(--accent-2);
+}
+
 .input {
   width: 100%;
-  border-radius: 2px;
   border: 1px solid var(--border);
   background: var(--paper);
   color: var(--ink);
   padding: 0.5rem 0.75rem;
   outline: none;
+  clip-path: polygon(6px 0%,
+      100% 0%,
+      100% calc(100% - 6px),
+      calc(100% - 6px) 100%,
+      0% 100%,
+      0% 6px);
 }
 
 .input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
+  box-shadow: 3px 3px 0 0 var(--accent);
 }
