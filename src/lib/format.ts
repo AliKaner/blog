@@ -21,6 +21,11 @@ export function formatMonthYear(timestamp: number): string {
   });
 }
 
+export function dayKey(timestamp: number): string {
+  const d = new Date(timestamp);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
 export function slugify(input: string): string {
   return input
     .toLowerCase()

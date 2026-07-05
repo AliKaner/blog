@@ -1,6 +1,12 @@
 import { formatMonthYear } from "@/lib/format";
 import { Markdown } from "../Markdown";
 
+type SubProject = {
+  name: string;
+  url?: string | null;
+  imageUrl?: string | null;
+};
+
 type ResumeItem = {
   _id: string;
   kind: "experience" | "education";
@@ -12,6 +18,7 @@ type ResumeItem = {
   url?: string | null;
   logoUrl?: string | null;
   stack?: string[] | null;
+  projects?: SubProject[] | null;
 };
 
 export function ResumeSection({ items }: { items: ResumeItem[] }) {
@@ -63,6 +70,18 @@ function ResumeColumn({
                 ))}
               </div>
             )}
+            {item.projects && item.projects.length > 0 && (
+              <div className="mt-4 flex flex-col gap-2">
+                <span className="font-mono text-xs uppercase tracking-wider text-ink-soft">
+                  Projects
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {item.projects.map((project, i) => (
+                    <SubProjectCard key={i} project={project} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -108,6 +127,35 @@ function OrganizationLine({ item }: { item: ResumeItem }) {
           {item.organization}
         </span>
       </span>
+    </a>
+  );
+}
+
+function SubProjectCard({ project }: { project: SubProject }) {
+  const inner = (
+    <div className="panel-sm flex w-40 flex-col overflow-hidden">
+      {project.imageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={project.imageUrl}
+          alt={project.name}
+          className="h-20 w-full object-cover"
+        />
+      )}
+      <p className="px-2 py-1.5 text-xs text-ink">{project.name}</p>
+    </div>
+  );
+
+  if (!project.url) return inner;
+
+  return (
+    <a
+      href={project.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="no-underline"
+    >
+      {inner}
     </a>
   );
 }

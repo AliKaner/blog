@@ -1,6 +1,6 @@
 import { fetchQuery } from "convex/nextjs";
 import { api } from "../../convex/_generated/api";
-import { FeedCard } from "@/components/feed/FeedCard";
+import { JourneyTimeline } from "@/components/feed/JourneyTimeline";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ResumeSection } from "@/components/profile/ResumeSection";
 import { ProjectsSection } from "@/components/profile/ProjectsSection";
@@ -26,15 +26,14 @@ export default async function HomePage() {
           along the way.
         </p>
 
-        <div className="mt-8 flex flex-col gap-4">
-          {feed.length === 0 && (
+        <div className="mt-8">
+          {feed.length === 0 ? (
             <p className="text-ink-soft">
               Nothing published yet — check back soon.
             </p>
+          ) : (
+            <JourneyTimeline items={feed} />
           )}
-          {feed.map((item) => (
-            <FeedCard key={`${item.type}-${item.id}`} {...item} />
-          ))}
         </div>
       </div>
     </div>

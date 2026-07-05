@@ -4,6 +4,13 @@ import { useState } from "react";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { dateToInputValue, inputValueToDate } from "@/lib/format";
 
+type SubProjectFormValue = {
+  name: string;
+  url: string;
+  imageStorageId: string | undefined;
+  existingImageUrl?: string | null;
+};
+
 export type ResumeItemFormValues = {
   kind: "experience" | "education";
   title: string;
@@ -17,6 +24,7 @@ export type ResumeItemFormValues = {
   url: string;
   logoStorageId: string | undefined;
   stack: string;
+  projects: SubProjectFormValue[];
 };
 
 const EMPTY: ResumeItemFormValues = {
@@ -32,6 +40,7 @@ const EMPTY: ResumeItemFormValues = {
   url: "",
   logoStorageId: undefined,
   stack: "",
+  projects: [],
 };
 
 export function ResumeItemForm({
@@ -55,6 +64,7 @@ export function ResumeItemForm({
     url?: string;
     logoStorageId?: string;
     stack?: string[];
+    projects?: { name: string; url?: string; imageStorageId?: string }[];
   }) => Promise<void>;
   onCancel: () => void;
   submitting: boolean;
@@ -69,6 +79,35 @@ export function ResumeItemForm({
     val: ResumeItemFormValues[K],
   ) {
     setValues((v) => ({ ...v, [key]: val }));
+  }
+
+  function setProject<K extends keyof SubProjectFormValue>(
+    index: number,
+    key: K,
+    val: SubProjectFormValue[K],
+  ) {
+    setValues((v) => {
+      const projects = [...v.projects];
+      projects[index] = { ...projects[index], [key]: val };
+      return { ...v, projects };
+    });
+  }
+
+  function addProject() {
+    setValues((v) => ({
+      ...v,
+      projects: [
+        ...v.projects,
+        { name: "", url: "", imageStorageId: undefined },
+      ],
+    }));
+  }
+
+  function removeProject(index: number) {
+    setValues((v) => ({
+      ...v,
+      projects: v.projects.filter((_, i) => i !== index),
+    }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -88,6 +127,13 @@ export function ResumeItemForm({
       url: values.url || undefined,
       logoStorageId: values.logoStorageId || undefined,
       stack: values.stack ? values.stack.split(",").map((s) => s.trim()).filter(Boolean) : undefined,
+      projects: values.projects
+        .filter((p) => p.name.trim())
+        .map((p) => ({
+          name: p.name.trim(),
+          url: p.url || undefined,
+          imageStorageId: p.imageStorageId || undefined,
+        })),
     });
   }
 
@@ -179,6 +225,61 @@ export function ResumeItemForm({
           placeholder="React, TypeScript, Node.js"
         />
       </Field>
+
+      <div>
+        <span className="block font-mono text-xs uppercase tracking-wide text-ink-soft">
+          Projects (during this role)
+        </span>
+        <div className="mt-2 flex flex-col gap-3">
+          {values.projects.map((project, i) => (
+            <div
+              key={i}
+              className="panel-sm flex flex-col gap-2 p-3"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs text-ink-soft">
+                  Project {i + 1}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeProject(i)}
+                  className="text-xs text-accent"
+                >
+                  Remove
+                </button>
+              </div>
+              <input
+                required
+                value={project.name}
+                onChange={(e) => setProject(i, "name", e.target.value)}
+                className="input"
+                placeholder="Project name"
+              />
+              <input
+                type="url"
+                value={project.url}
+                onChange={(e) => setProject(i, "url", e.target.value)}
+                className="input"
+                placeholder="https://example.com (optional)"
+              />
+              <ImageUploader
+                label="Image"
+                value={project.imageStorageId}
+                existingUrl={project.existingImageUrl}
+                onChange={(id) => setProject(i, "imageStorageId", id)}
+              />
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={addProject}
+          className="btn mt-3 px-3 py-1.5 text-sm"
+        >
+          + Add project
+        </button>
+      </div>
+
       <Field label="Sort order (lower shows first)">
         <input
           type="number"

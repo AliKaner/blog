@@ -57,6 +57,12 @@ export default function AdminResumePage() {
                     url: editing.url ?? "",
                     logoStorageId: editing.logoStorageId,
                     stack: editing.stack ? editing.stack.join(", ") : "",
+                    projects: (editing.projects ?? []).map((p) => ({
+                      name: p.name,
+                      url: p.url ?? "",
+                      imageStorageId: p.imageStorageId,
+                      existingImageUrl: p.imageUrl,
+                    })),
                   }
                 : undefined
             }
@@ -71,10 +77,14 @@ export default function AdminResumePage() {
               setFormError(null);
               try {
                 const logoStorageId = values.logoStorageId as Id<"_storage"> | undefined;
+                const projects = values.projects?.map((p) => ({
+                  ...p,
+                  imageStorageId: p.imageStorageId as Id<"_storage"> | undefined,
+                }));
                 if (editingId === "new") {
-                  await create({ token, ...values, logoStorageId });
+                  await create({ token, ...values, logoStorageId, projects });
                 } else {
-                  await update({ token, id: editingId, ...values, logoStorageId });
+                  await update({ token, id: editingId, ...values, logoStorageId, projects });
                 }
                 setEditingId(null);
               } catch (e) {

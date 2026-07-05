@@ -111,6 +111,15 @@ export default defineSchema({
     url: v.optional(v.string()),
     logoStorageId: v.optional(v.id("_storage")),
     stack: v.optional(v.array(v.string())),
+    projects: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          url: v.optional(v.string()),
+          imageStorageId: v.optional(v.id("_storage")),
+        }),
+      ),
+    ),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_kind_order", ["kind", "order"]),

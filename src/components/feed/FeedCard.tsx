@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { formatDate } from "@/lib/format";
 import { FEED_TYPE_LABEL, FEED_TYPE_PATH, type FeedItemType } from "@/lib/feedTypes";
 
 type FeedCardProps = {
@@ -16,7 +15,6 @@ export function FeedCard({
   type,
   slug,
   title,
-  date,
   excerpt,
   imageUrl,
   rating,
@@ -38,8 +36,6 @@ export function FeedCard({
       <div className="min-w-0">
         <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-wide text-accent">
           <span>{FEED_TYPE_LABEL[type]}</span>
-          <span className="text-ink-soft">·</span>
-          <span className="text-ink-soft">{formatDate(date)}</span>
           {typeof rating === "number" && (
             <>
               <span className="text-ink-soft">·</span>
