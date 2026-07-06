@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { PetSprite } from "./PetSprite";
@@ -104,6 +105,7 @@ function computeZones(): Zone[] {
 }
 
 export function PetStrip() {
+  const pathname = usePathname();
   const approvedCustomQuery = useQuery(api.customPets.listApproved);
   const [ownCustomIds, setOwnCustomIds] = useState<string[]>([]);
   useEffect(() => {
@@ -241,6 +243,10 @@ export function PetStrip() {
     }, TICK_MS);
     return () => clearInterval(id);
   }, []);
+
+  // Pet Corner has its own interactive yard, so keep the roaming margin
+  // companions off that page — only the yard pets should show there.
+  if (pathname === "/pets") return null;
 
   return (
     <div
