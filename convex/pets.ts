@@ -49,6 +49,16 @@ export const feedPet = mutation({
   },
 });
 
+export const clearBuiltinPets = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const pets = await ctx.db.query("pets").collect();
+    for (const pet of pets) {
+      await ctx.db.delete(pet._id);
+    }
+  },
+});
+
 export const seedPets = internalMutation({
   args: {},
   handler: async (ctx) => {
