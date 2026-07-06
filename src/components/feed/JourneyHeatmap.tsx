@@ -2,7 +2,8 @@ import { formatDate } from "@/lib/format";
 import type { FeedItemType } from "@/lib/feedTypes";
 
 const START_YEAR = 2018;
-const CELL = 13;
+const CELL = 10;
+const CELL_GAP = 2;
 const WEEK_MS = 7 * 86_400_000;
 const TOOLTIP_MAX = 6;
 
@@ -73,11 +74,13 @@ export function JourneyHeatmap({
         {total} thing{total === 1 ? "" : "s"} since {START_YEAR}, one square
         per week
       </p>
-      <div className="mt-4 flex flex-col gap-5">
+      <div className="mt-4 flex flex-col" style={{ gap: CELL_GAP }}>
         {yearRows.map(([year, weeks]) => (
-          <div key={year}>
-            <span className="font-mono text-xs text-ink-soft">{year}</span>
-            <div className="mt-1.5 flex flex-wrap">
+          <div key={year} className="flex items-center gap-2">
+            <span className="w-9 shrink-0 font-mono text-xs text-ink-soft">
+              {year}
+            </span>
+            <div className="flex flex-wrap" style={{ gap: CELL_GAP }}>
               {weeks.map((week) => (
                 <Cell key={week.start} week={week} />
               ))}
