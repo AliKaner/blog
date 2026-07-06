@@ -1,76 +1,237 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { PetSprite } from "./PetSprite";
+import { CustomPetSprite } from "./CustomPetSprite";
+import { myCustomPetIds } from "./PixelPetEditor";
 import type { Frame, PetKind } from "./spriteData";
+import type { Id } from "../../../convex/_generated/dataModel";
 
-const STRIP_HEIGHT = 72;
-const PET_SIZE = 50;
+const PET_SIZE = 46;
 const TICK_MS = 50;
+const TICK_S = TICK_MS / 1000;
 const WALK_FRAME_INTERVAL_MS = 220;
+const ARRIVE_DIST = 4;
+const GUTTER_MIN = 64; // a side needs at least this much room to roam it
+const TOP_INSET = 72; // keep clear of the fixed site nav
+const EDGE = 8;
+const MAX_CUSTOM = 12; // cap so the margins never get too crowded
 
+type Zone = { x0: number; y0: number; x1: number; y1: number };
+
+// Decorative built-in companions that are always present, independent of
+// the database — the same three the strip has always shown.
 const COMPANIONS: { kind: PetKind; speed: number }[] = [
-  { kind: "cat", speed: 34 },
-  { kind: "dog", speed: 26 },
-  { kind: "bird", speed: 42 },
+  { kind: "cat", speed: 30 },
+  { kind: "dog", speed: 24 },
+  { kind: "bird", speed: 38 },
 ];
 
-type StripState = {
+type Roamer =
+  | { key: string; origin: "builtin"; kind: PetKind; speed: number; name?: undefined }
+  | {
+      key: string;
+      origin: "custom";
+      name: string;
+      frame1: (string | null)[];
+      frame2: (string | null)[];
+      speed: number;
+    };
+
+type SimState = {
   x: number;
-  dir: 1 | -1;
+  y: number;
+  tx: number;
+  ty: number;
+  zone: number;
+  facingRight: boolean;
   frame: Frame;
   frameToggle: 0 | 1;
   frameTimer: number;
+  pauseUntil: number;
 };
 
-function initialState(index: number, width: number): StripState {
-  return {
-    x: (width / (COMPANIONS.length + 1)) * (index + 1) - PET_SIZE / 2,
-    dir: Math.random() > 0.5 ? 1 : -1,
-    frame: "walk1",
-    frameToggle: 0,
-    frameTimer: 0,
-  };
+function randIn(min: number, max: number): number {
+  return min + Math.random() * Math.max(0, max - min);
+}
+
+function pickTarget(zone: Zone): { x: number; y: number } {
+  return { x: randIn(zone.x0, zone.x1), y: randIn(zone.y0, zone.y1) };
+}
+
+// Everything outside the centered content column is fair game. The column's
+// horizontal position doesn't change as the page scrolls, so the left/right
+// gutters are stable roaming lanes; pets never wander over the content.
+function computeZones(): Zone[] {
+  if (typeof window === "undefined") return [];
+  const main = document.querySelector("main");
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const rect = main?.getBoundingClientRect();
+  const left = rect ? rect.left : vw;
+  const right = rect ? rect.right : 0;
+
+  const zones: Zone[] = [];
+  if (left >= GUTTER_MIN + EDGE) {
+    zones.push({
+      x0: EDGE,
+      y0: TOP_INSET,
+      x1: left - PET_SIZE - EDGE,
+      y1: vh - PET_SIZE - EDGE,
+    });
+  }
+  if (vw - right >= GUTTER_MIN + EDGE) {
+    zones.push({
+      x0: right + EDGE,
+      y0: TOP_INSET,
+      x1: vw - PET_SIZE - EDGE,
+      y1: vh - PET_SIZE - EDGE,
+    });
+  }
+  // Narrow screens: no side room, so tuck them into a bottom band instead
+  // of covering the content.
+  if (zones.length === 0) {
+    zones.push({
+      x0: EDGE,
+      y0: vh - PET_SIZE - EDGE,
+      x1: vw - PET_SIZE - EDGE,
+      y1: vh - PET_SIZE - EDGE,
+    });
+  }
+  return zones;
 }
 
 export function PetStrip() {
+  const pathname = usePathname();
+  const approvedCustomQuery = useQuery(api.customPets.listApproved);
+  const [ownCustomIds, setOwnCustomIds] = useState<string[]>([]);
+  useEffect(() => {
+    // localStorage is browser-only, so read it in an effect (SSR-safe).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOwnCustomIds(myCustomPetIds());
+  }, []);
+  const ownCustomQuery = useQuery(
+    api.customPets.getByIds,
+    ownCustomIds.length > 0
+      ? { ids: ownCustomIds as Id<"customPets">[] }
+      : "skip",
+  );
+
+  const roamers: Roamer[] = (() => {
+    const list: Roamer[] = COMPANIONS.map((c) => ({
+      key: `builtin-${c.kind}`,
+      origin: "builtin" as const,
+      kind: c.kind,
+      speed: c.speed,
+    }));
+    const seen = new Set<string>();
+    const customs = [...(approvedCustomQuery ?? []), ...(ownCustomQuery ?? [])];
+    for (const p of customs) {
+      if (seen.has(p._id)) continue;
+      seen.add(p._id);
+      if (list.length - COMPANIONS.length >= MAX_CUSTOM) break;
+      list.push({
+        key: `custom-${p._id}`,
+        origin: "custom",
+        name: p.name,
+        frame1: p.frame1,
+        frame2: p.frame2,
+        speed: 22 + Math.random() * 16,
+      });
+    }
+    return list;
+  })();
+
   const containerRef = useRef<HTMLDivElement>(null);
-  const widthRef = useRef(1200);
-  const stateRef = useRef<StripState[]>([]);
-  const [snapshot, setSnapshot] = useState<StripState[]>([]);
+  const zonesRef = useRef<Zone[]>([]);
+  const simRef = useRef<Record<string, SimState>>({});
+  const roamersRef = useRef<Roamer[]>([]);
+  const [snapshot, setSnapshot] = useState<Record<string, SimState>>({});
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
+    roamersRef.current = roamers;
+  });
+
+  useEffect(() => {
     const measure = () => {
-      widthRef.current = el.clientWidth;
+      zonesRef.current = computeZones();
     };
     measure();
-    if (stateRef.current.length === 0) {
-      stateRef.current = COMPANIONS.map((_, i) =>
-        initialState(i, widthRef.current),
-      );
-      setSnapshot([...stateRef.current]);
-    }
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    return () => observer.disconnect();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
   }, []);
+
+  // Seed a sim state for each roamer the first time it appears.
+  useEffect(() => {
+    if (zonesRef.current.length === 0) zonesRef.current = computeZones();
+    const zones = zonesRef.current;
+    let changed = false;
+    roamers.forEach((r, i) => {
+      if (simRef.current[r.key]) return;
+      changed = true;
+      const zoneIdx = i % zones.length;
+      const zone = zones[zoneIdx];
+      const start = pickTarget(zone);
+      const target = pickTarget(zone);
+      simRef.current[r.key] = {
+        x: start.x,
+        y: start.y,
+        tx: target.x,
+        ty: target.y,
+        zone: zoneIdx,
+        facingRight: target.x >= start.x,
+        frame: "walk1",
+        frameToggle: 0,
+        frameTimer: 0,
+        pauseUntil: 0,
+      };
+    });
+    // Drop sim state for roamers that went away.
+    const live = new Set(roamers.map((r) => r.key));
+    for (const key of Object.keys(simRef.current)) {
+      if (!live.has(key)) {
+        delete simRef.current[key];
+        changed = true;
+      }
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (changed) setSnapshot({ ...simRef.current });
+  }, [roamers]);
 
   useEffect(() => {
     const id = setInterval(() => {
-      const width = widthRef.current;
-      for (let i = 0; i < stateRef.current.length; i++) {
-        const s = stateRef.current[i];
-        const speed = COMPANIONS[i].speed;
-        s.x += s.dir * speed * (TICK_MS / 1000);
-        if (s.x <= 0) {
-          s.x = 0;
-          s.dir = 1;
-        } else if (s.x >= width - PET_SIZE) {
-          s.x = width - PET_SIZE;
-          s.dir = -1;
+      const now = Date.now();
+      const zones = zonesRef.current;
+      if (zones.length === 0) return;
+      for (const r of roamersRef.current) {
+        const s = simRef.current[r.key];
+        if (!s) continue;
+        const zone = zones[Math.min(s.zone, zones.length - 1)];
+
+        if (now < s.pauseUntil) {
+          s.frame = "idle";
+          continue;
         }
+
+        const dx = s.tx - s.x;
+        const dy = s.ty - s.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < ARRIVE_DIST) {
+          const next = pickTarget(zone);
+          s.tx = next.x;
+          s.ty = next.y;
+          s.pauseUntil = now + 600 + Math.random() * 2200;
+          s.frame = "idle";
+          continue;
+        }
+
+        const step = r.speed * TICK_S;
+        s.x += (dx / dist) * step;
+        s.y += (dy / dist) * step;
+        s.facingRight = dx >= 0;
         s.frameTimer += TICK_MS;
         if (s.frameTimer >= WALK_FRAME_INTERVAL_MS) {
           s.frameTimer = 0;
@@ -78,33 +239,47 @@ export function PetStrip() {
           s.frame = s.frameToggle === 0 ? "walk1" : "walk2";
         }
       }
-      setSnapshot([...stateRef.current]);
+      setSnapshot({ ...simRef.current });
     }, TICK_MS);
     return () => clearInterval(id);
   }, []);
+
+  // Pet Corner has its own interactive yard, so keep the roaming margin
+  // companions off that page — only the yard pets should show there.
+  if (pathname === "/pets") return null;
 
   return (
     <div
       ref={containerRef}
       aria-hidden
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 overflow-hidden border-t border-border"
-      style={{
-        height: STRIP_HEIGHT,
-        background: "color-mix(in srgb, var(--card) 85%, transparent)",
-        boxShadow: "0 0 12px 0 var(--border)",
-      }}
+      className="pointer-events-none fixed inset-0 z-40 overflow-hidden"
     >
-      {snapshot.map((s, i) => (
-        <div
-          key={COMPANIONS[i].kind}
-          className="absolute bottom-1"
-          style={{ transform: `translateX(${s.x}px)` }}
-        >
-          <PetSprite kind={COMPANIONS[i].kind} frame={s.frame} facingRight={s.dir === 1} />
-        </div>
-      ))}
+      {roamers.map((r) => {
+        const s = snapshot[r.key];
+        if (!s) return null;
+        return (
+          <div
+            key={r.key}
+            className="absolute left-0 top-0 flex flex-col items-center"
+            style={{ transform: `translate(${s.x}px, ${s.y}px)` }}
+          >
+            {r.origin === "builtin" ? (
+              <PetSprite kind={r.kind} frame={s.frame} facingRight={s.facingRight} />
+            ) : (
+              <>
+                <CustomPetSprite
+                  frame={(s.frame === "walk2" ? r.frame2 : r.frame1) ?? r.frame1}
+                  pixelSize={PET_SIZE / 32}
+                  facingRight={s.facingRight}
+                />
+                <span className="mt-0.5 font-mono text-[9px] text-ink-soft">
+                  {r.name}
+                </span>
+              </>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
-
-export const PET_STRIP_HEIGHT = STRIP_HEIGHT;

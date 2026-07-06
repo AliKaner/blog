@@ -1,9 +1,13 @@
 import { formatDate } from "@/lib/format";
+import type { FeedItemType } from "@/lib/feedTypes";
 
 const START_YEAR = 2018;
-const CELL = 12;
-const GAP = 3;
+const CELL = 10;
+const CELL_GAP = 2;
 const WEEK_MS = 7 * 86_400_000;
+const TOOLTIP_MAX = 6;
+
+type Item = { type: FeedItemType; title: string; date: number };
 
 function startOfWeek(timestamp: number): number {
   const d = new Date(timestamp);
@@ -27,28 +31,42 @@ function cellColor(count: number): string {
   return "var(--accent)";
 }
 
+type Week = { start: number; items: Item[] };
+
 export function JourneyHeatmap({
   items,
   now,
 }: {
-  items: { date: number }[];
+  items: Item[];
   now: number;
 }) {
-  const counts = new Map<number, number>();
+  const weekItems = new Map<number, Item[]>();
   for (const item of items) {
     const key = startOfWeek(item.date);
-    counts.set(key, (counts.get(key) ?? 0) + 1);
+    const bucket = weekItems.get(key);
+    if (bucket) bucket.push(item);
+    else weekItems.set(key, [item]);
   }
 
   const firstWeek = startOfWeek(new Date(START_YEAR, 0, 1).getTime());
   const lastWeek = startOfWeek(now);
 
-  const weeks: { start: number; count: number }[] = [];
+  // Bucket every week into its year. Weeks are visited in chronological
+  // order so each year's row stays left-to-right January→December, while
+  // the years themselves are rendered newest-first below.
+  const years = new Map<number, Week[]>();
+  let total = 0;
   for (let t = firstWeek; t <= lastWeek; t += WEEK_MS) {
-    weeks.push({ start: t, count: counts.get(t) ?? 0 });
+    const weekItemList = weekItems.get(t) ?? [];
+    total += weekItemList.length;
+    const year = weekYear(t);
+    const row = years.get(year);
+    const week = { start: t, items: weekItemList };
+    if (row) row.push(week);
+    else years.set(year, [week]);
   }
 
-  const total = weeks.reduce((sum, w) => sum + w.count, 0);
+  const yearRows = [...years.entries()].sort((a, b) => b[0] - a[0]);
 
   return (
     <div>
@@ -56,31 +74,66 @@ export function JourneyHeatmap({
         {total} thing{total === 1 ? "" : "s"} since {START_YEAR}, one square
         per week
       </p>
-      <div className="mt-3 flex flex-wrap" style={{ gap: GAP }}>
-        {weeks.map((week, i) => {
-          const year = weekYear(week.start);
-          const isFirstOfYear =
-            i === 0 || weekYear(weeks[i - 1].start) !== year;
-          const weekEnd = week.start + WEEK_MS - 86_400_000;
-          return (
-            <div key={week.start} className="contents">
-              {isFirstOfYear && (
-                <span className="mt-2 basis-full font-mono text-xs text-ink-soft first:mt-0">
-                  {year}
-                </span>
-              )}
-              <div
-                title={`Week of ${formatDate(week.start)}–${formatDate(weekEnd)} · ${week.count} thing${week.count === 1 ? "" : "s"}`}
-                style={{
-                  height: CELL,
-                  width: CELL,
-                  borderRadius: 2,
-                  background: cellColor(week.count),
-                }}
-              />
+      <div className="mt-4 flex flex-col" style={{ gap: CELL_GAP }}>
+        {yearRows.map(([year, weeks]) => (
+          <div key={year} className="flex items-center gap-2">
+            <span className="w-9 shrink-0 font-mono text-xs text-ink-soft">
+              {year}
+            </span>
+            <div className="flex flex-wrap" style={{ gap: CELL_GAP }}>
+              {weeks.map((week) => (
+                <Cell key={week.start} week={week} />
+              ))}
             </div>
-          );
-        })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Cell({ week }: { week: Week }) {
+  const count = week.items.length;
+  const weekEnd = week.start + WEEK_MS - 86_400_000;
+
+  if (count === 0) {
+    return (
+      <div
+        style={{ height: CELL, width: CELL, background: cellColor(0) }}
+      />
+    );
+  }
+
+  return (
+    <div className="group relative hover:z-20" style={{ height: CELL, width: CELL }}>
+      <div style={{ height: CELL, width: CELL, background: cellColor(count) }} />
+      <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 hidden w-56 -translate-x-1/2 group-hover:block">
+        <div
+          className="border border-border p-2.5"
+          style={{ background: "var(--card)", boxShadow: "4px 4px 0 0 var(--accent)" }}
+        >
+          <p className="font-mono text-[10px] uppercase tracking-wide text-accent">
+            {formatDate(week.start)} – {formatDate(weekEnd)}
+          </p>
+          <ul className="mt-1.5 space-y-0.5">
+            {week.items.slice(0, TOOLTIP_MAX).map((item, i) => (
+              <li key={i} className="truncate text-xs text-ink">
+                <span className="text-ink-soft">›</span> {item.title}
+              </li>
+            ))}
+            {count > TOOLTIP_MAX && (
+              <li className="text-xs text-ink-soft">
+                +{count - TOOLTIP_MAX} more
+              </li>
+            )}
+          </ul>
+        </div>
+        {/* Pointed tip keeping the app's square corners — a rotated
+            square whose two visible edges continue the panel border. */}
+        <div
+          className="absolute left-1/2 top-full -mt-1 h-2 w-2 -translate-x-1/2 rotate-45 border-b border-r border-border"
+          style={{ background: "var(--card)" }}
+        />
       </div>
     </div>
   );
