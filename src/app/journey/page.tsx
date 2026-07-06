@@ -25,7 +25,7 @@ export default async function JourneyPage() {
         </p>
       ) : (
         <>
-          <div className="mt-8 overflow-x-auto border-b border-border pb-8">
+          <div className="mt-8 border-b border-border pb-8">
             <JourneyHeatmap items={feed} now={now} />
           </div>
           <div className="mt-8">
