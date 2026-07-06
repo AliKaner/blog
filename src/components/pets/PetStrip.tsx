@@ -4,10 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { PetSprite } from "./PetSprite";
 import { CustomPetSprite } from "./CustomPetSprite";
 import { myCustomPetIds } from "./PixelPetEditor";
-import type { Frame, PetKind } from "./spriteData";
+import type { Frame } from "./spriteData";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 const PET_SIZE = 46;
@@ -22,24 +21,13 @@ const MAX_CUSTOM = 12; // cap so the margins never get too crowded
 
 type Zone = { x0: number; y0: number; x1: number; y1: number };
 
-// Decorative built-in companions that are always present, independent of
-// the database — the same three the strip has always shown.
-const COMPANIONS: { kind: PetKind; speed: number }[] = [
-  { kind: "cat", speed: 30 },
-  { kind: "dog", speed: 24 },
-  { kind: "bird", speed: 38 },
-];
-
-type Roamer =
-  | { key: string; origin: "builtin"; kind: PetKind; speed: number; name?: undefined }
-  | {
-      key: string;
-      origin: "custom";
-      name: string;
-      frame1: (string | null)[];
-      frame2: (string | null)[];
-      speed: number;
-    };
+type Roamer = {
+  key: string;
+  name: string;
+  frame1: (string | null)[];
+  frame2: (string | null)[];
+  speed: number;
+};
 
 type SimState = {
   x: number;
@@ -56,6 +44,16 @@ type SimState = {
 
 function randIn(min: number, max: number): number {
   return min + Math.random() * Math.max(0, max - min);
+}
+
+// Deterministic per-pet speed (avoids Math.random() during render, which
+// React's purity rules disallow) — same pet always gets the same pace.
+function speedFromId(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  }
+  return 22 + (hash % 1600) / 100;
 }
 
 function pickTarget(zone: Zone): { x: number; y: number } {
@@ -120,26 +118,21 @@ export function PetStrip() {
       : "skip",
   );
 
+  // Only hand-painted pets roam the margins — no built-in companions.
   const roamers: Roamer[] = (() => {
-    const list: Roamer[] = COMPANIONS.map((c) => ({
-      key: `builtin-${c.kind}`,
-      origin: "builtin" as const,
-      kind: c.kind,
-      speed: c.speed,
-    }));
+    const list: Roamer[] = [];
     const seen = new Set<string>();
     const customs = [...(approvedCustomQuery ?? []), ...(ownCustomQuery ?? [])];
     for (const p of customs) {
       if (seen.has(p._id)) continue;
       seen.add(p._id);
-      if (list.length - COMPANIONS.length >= MAX_CUSTOM) break;
+      if (list.length >= MAX_CUSTOM) break;
       list.push({
         key: `custom-${p._id}`,
-        origin: "custom",
         name: p.name,
         frame1: p.frame1,
         frame2: p.frame2,
-        speed: 22 + Math.random() * 16,
+        speed: speedFromId(p._id),
       });
     }
     return list;
@@ -197,7 +190,6 @@ export function PetStrip() {
         changed = true;
       }
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (changed) setSnapshot({ ...simRef.current });
   }, [roamers]);
 
@@ -247,6 +239,7 @@ export function PetStrip() {
   // Pet Corner has its own interactive yard, so keep the roaming margin
   // companions off that page — only the yard pets should show there.
   if (pathname === "/pets") return null;
+  if (roamers.length === 0) return null;
 
   return (
     <div
@@ -263,20 +256,14 @@ export function PetStrip() {
             className="absolute left-0 top-0 flex flex-col items-center"
             style={{ transform: `translate(${s.x}px, ${s.y}px)` }}
           >
-            {r.origin === "builtin" ? (
-              <PetSprite kind={r.kind} frame={s.frame} facingRight={s.facingRight} />
-            ) : (
-              <>
-                <CustomPetSprite
-                  frame={(s.frame === "walk2" ? r.frame2 : r.frame1) ?? r.frame1}
-                  pixelSize={PET_SIZE / 32}
-                  facingRight={s.facingRight}
-                />
-                <span className="mt-0.5 font-mono text-[9px] text-ink-soft">
-                  {r.name}
-                </span>
-              </>
-            )}
+            <CustomPetSprite
+              frame={(s.frame === "walk2" ? r.frame2 : r.frame1) ?? r.frame1}
+              pixelSize={PET_SIZE / 32}
+              facingRight={s.facingRight}
+            />
+            <span className="mt-0.5 font-mono text-[9px] text-ink-soft">
+              {r.name}
+            </span>
           </div>
         );
       })}
