@@ -114,6 +114,24 @@ export const feedCustomPet = mutation({
   },
 });
 
+export const update = mutation({
+  args: {
+    token: v.string(),
+    id: v.id("customPets"),
+    name: v.string(),
+    frame1: frameValidator,
+    frame2: frameValidator,
+  },
+  handler: async (ctx, { token, id, name, frame1, frame2 }) => {
+    await requireAdmin(ctx, token);
+    const trimmedName = name.trim().slice(0, 24);
+    if (!trimmedName) throw new Error("Give this pet a name");
+    assertValidFrame(frame1, "frame1");
+    assertValidFrame(frame2, "frame2");
+    await ctx.db.patch(id, { name: trimmedName, frame1, frame2 });
+  },
+});
+
 export const togglePublish = mutation({
   args: { token: v.string(), id: v.id("customPets"), published: v.boolean() },
   handler: async (ctx, { token, id, published }) => {

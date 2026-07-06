@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import { emptyFrame, GRID_SIZE, NEON_PALETTE } from "@/lib/customPetGrid";
 import { CustomPetSprite } from "./CustomPetSprite";
+import { useAdminSession } from "@/components/providers/AdminSessionProvider";
+import type { Id } from "../../../convex/_generated/dataModel";
 
 const EDITOR_PIXEL_SIZE = 9;
 const STORAGE_KEY = "my_custom_pet_ids";
@@ -24,13 +26,35 @@ function rememberCustomPetId(id: string) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids, id]));
 }
 
-export function PixelPetEditor() {
+type PixelPetEditorProps = {
+  mode?: "create" | "edit";
+  petId?: Id<"customPets">;
+  initialName?: string;
+  initialFrame1?: (string | null)[];
+  initialFrame2?: (string | null)[];
+  onSaved?: () => void;
+};
+
+export function PixelPetEditor({
+  mode = "create",
+  petId,
+  initialName = "",
+  initialFrame1,
+  initialFrame2,
+  onSaved,
+}: PixelPetEditorProps = {}) {
   const submit = useMutation(api.customPets.submit);
-  const [frame1, setFrame1] = useState<(string | null)[]>(() => emptyFrame());
-  const [frame2, setFrame2] = useState<(string | null)[]>(() => emptyFrame());
+  const update = useMutation(api.customPets.update);
+  const { token } = useAdminSession();
+  const [frame1, setFrame1] = useState<(string | null)[]>(
+    () => initialFrame1 ?? emptyFrame(),
+  );
+  const [frame2, setFrame2] = useState<(string | null)[]>(
+    () => initialFrame2 ?? emptyFrame(),
+  );
   const [activeFrame, setActiveFrame] = useState<1 | 2>(1);
   const [color, setColor] = useState<string | null>(NEON_PALETTE[0]);
-  const [name, setName] = useState("");
+  const [name, setName] = useState(initialName);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -153,11 +177,17 @@ export function PixelPetEditor() {
     setError(null);
     setSubmitting(true);
     try {
-      const id = await submit({ name, frame1, frame2 });
-      rememberCustomPetId(id);
-      setSubmitted(true);
+      if (mode === "edit") {
+        if (!petId || !token) throw new Error("Not authenticated");
+        await update({ token, id: petId, name, frame1, frame2 });
+        onSaved?.();
+      } else {
+        const id = await submit({ name, frame1, frame2 });
+        rememberCustomPetId(id);
+        setSubmitted(true);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't submit.");
+      setError(err instanceof Error ? err.message : "Couldn't save.");
     } finally {
       setSubmitting(false);
     }
@@ -288,13 +318,28 @@ export function PixelPetEditor() {
             />
           </label>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="btn w-fit px-4 py-2 text-sm disabled:opacity-50"
-          >
-            {submitting ? "Submitting…" : "Submit for approval"}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn w-fit px-4 py-2 text-sm disabled:opacity-50"
+            >
+              {submitting
+                ? "Saving…"
+                : mode === "edit"
+                  ? "Save changes"
+                  : "Submit for approval"}
+            </button>
+            {mode === "edit" && (
+              <button
+                type="button"
+                onClick={onSaved}
+                className="text-sm text-ink-soft"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
           {error && <p className="text-xs text-accent">{error}</p>}
         </div>
       </div>

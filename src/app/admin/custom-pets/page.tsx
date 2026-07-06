@@ -1,10 +1,13 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
+import { useState } from "react";
 import { api } from "../../../../convex/_generated/api";
 import { useAdminSession } from "@/components/providers/AdminSessionProvider";
 import { CustomPetSprite } from "@/components/pets/CustomPetSprite";
+import { PixelPetEditor } from "@/components/pets/PixelPetEditor";
 import { formatDate } from "@/lib/format";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 export default function AdminCustomPetsPage() {
   const { token } = useAdminSession();
@@ -14,8 +17,31 @@ export default function AdminCustomPetsPage() {
   );
   const togglePublish = useMutation(api.customPets.togglePublish);
   const remove = useMutation(api.customPets.remove);
+  const [editingId, setEditingId] = useState<Id<"customPets"> | null>(null);
 
   if (!token || pets === undefined) return <p>Loading…</p>;
+
+  const editing = pets.find((p) => p._id === editingId);
+
+  if (editing) {
+    return (
+      <div>
+        <h1 className="font-heading text-2xl text-ink">
+          Edit Pet — {editing.name}
+        </h1>
+        <div className="mt-6">
+          <PixelPetEditor
+            mode="edit"
+            petId={editing._id}
+            initialName={editing.name}
+            initialFrame1={editing.frame1}
+            initialFrame2={editing.frame2}
+            onSaved={() => setEditingId(null)}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -55,6 +81,12 @@ export default function AdminCustomPetsPage() {
                 className="text-ink-soft hover:text-ink"
               >
                 {pet.published ? "Unapprove" : "Approve"}
+              </button>
+              <button
+                onClick={() => setEditingId(pet._id)}
+                className="text-ink-soft hover:text-ink"
+              >
+                Edit
               </button>
               <button
                 onClick={() => {
