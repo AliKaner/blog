@@ -8,7 +8,7 @@ import { CustomPetSprite } from "./CustomPetSprite";
 import { useAdminSession } from "@/components/providers/AdminSessionProvider";
 import type { Id } from "../../../convex/_generated/dataModel";
 
-const EDITOR_PIXEL_SIZE = 9;
+const EDITOR_PIXEL_SIZE = 6;
 const STORAGE_KEY = "my_custom_pet_ids";
 
 export function myCustomPetIds(): string[] {
