@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 
 export const SESSION_TTL_MS = 14 * 24 * 60 * 60 * 1000;
@@ -6,13 +7,13 @@ export async function requireAdmin(
   ctx: MutationCtx | QueryCtx,
   token: string | undefined,
 ) {
-  if (!token) throw new Error("Not authenticated");
+  if (!token) throw new ConvexError("Not authenticated");
   const session = await ctx.db
     .query("adminSessions")
     .withIndex("by_token", (q) => q.eq("token", token))
     .unique();
   if (!session || session.expiresAt < Date.now()) {
-    throw new Error("Session expired or invalid");
+    throw new ConvexError("Session expired or invalid");
   }
   return session;
 }

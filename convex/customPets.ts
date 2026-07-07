@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAdmin } from "./lib/requireAdmin";
 import {
@@ -13,7 +13,7 @@ const frameValidator = v.array(v.union(v.string(), v.null()));
 
 function assertValidFrame(frame: (string | null)[], label: string) {
   if (frame.length !== TOTAL_CELLS) {
-    throw new Error(`${label} must have exactly ${TOTAL_CELLS} cells`);
+    throw new ConvexError(`${label} must have exactly ${TOTAL_CELLS} cells`);
   }
 }
 
@@ -39,6 +39,16 @@ function sanitizeSay(raw?: string): string | undefined {
   return s || undefined;
 }
 
+function cleanObject<T extends object>(obj: T): T {
+  const res = {} as any;
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== undefined) {
+      res[k] = v;
+    }
+  }
+  return res;
+}
+
 export const submit = mutation({
   args: {
     name: v.string(),
@@ -49,11 +59,11 @@ export const submit = mutation({
   },
   handler: async (ctx, { name, frame1, frame2, link, say }) => {
     const trimmedName = name.trim().slice(0, 24);
-    if (!trimmedName) throw new Error("Give your pet a name");
+    if (!trimmedName) throw new ConvexError("Give your pet a name");
     assertValidFrame(frame1, "frame1");
     assertValidFrame(frame2, "frame2");
     const now = Date.now();
-    return await ctx.db.insert("customPets", {
+    const petData = cleanObject({
       name: trimmedName,
       frame1,
       frame2,
@@ -66,6 +76,7 @@ export const submit = mutation({
       published: false,
       createdAt: now,
     });
+    return await ctx.db.insert("customPets", petData);
   },
 });
 
@@ -127,10 +138,10 @@ export const feedCustomPet = mutation({
   args: { petId: v.id("customPets") },
   handler: async (ctx, { petId }) => {
     const pet = await ctx.db.get(petId);
-    if (!pet) throw new Error("Pet not found");
+    if (!pet) throw new ConvexError("Pet not found");
     const now = Date.now();
     if (now - pet.lastFedAt < FEED_COOLDOWN_MS) {
-      throw new Error("This pet just ate — try again in a moment");
+      throw new ConvexError("This pet just ate — try again in a moment");
     }
     const effective = computeEffective(pet, now);
     const hunger = Math.min(100, effective.hunger + FEED_HUNGER_BOOST);
@@ -157,7 +168,7 @@ export const update = mutation({
   handler: async (ctx, { token, id, name, frame1, frame2, link, say }) => {
     await requireAdmin(ctx, token);
     const trimmedName = name.trim().slice(0, 24);
-    if (!trimmedName) throw new Error("Give this pet a name");
+    if (!trimmedName) throw new ConvexError("Give this pet a name");
     assertValidFrame(frame1, "frame1");
     assertValidFrame(frame2, "frame2");
     await ctx.db.patch(id, {
