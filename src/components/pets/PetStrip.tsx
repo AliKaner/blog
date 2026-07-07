@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { CustomPetSprite } from "./CustomPetSprite";
@@ -18,6 +18,15 @@ const GUTTER_MIN = 64; // a side needs at least this much room to roam it
 const TOP_INSET = 72; // keep clear of the fixed site nav
 const EDGE = 8;
 const MAX_CUSTOM = 12; // cap so the margins never get too crowded
+const CHATTER_KEY = "petChatter"; // localStorage flag: speech bubbles on/off
+const BUBBLE_MS = 2000; // how long a bubble stays up
+const BUBBLE_CHANCE = 0.4; // odds a pet speaks when it stops to rest
+
+const CUSTOM_SOUNDS = ["hi!", "hello", "hey", "♪"];
+
+function pickSound(): string {
+  return CUSTOM_SOUNDS[Math.floor(Math.random() * CUSTOM_SOUNDS.length)];
+}
 
 type Zone = { x0: number; y0: number; x1: number; y1: number };
 
@@ -40,6 +49,8 @@ type SimState = {
   frameToggle: 0 | 1;
   frameTimer: number;
   pauseUntil: number;
+  bubble: string | null;
+  bubbleUntil: number;
 };
 
 function randIn(min: number, max: number): number {
@@ -104,6 +115,7 @@ function computeZones(): Zone[] {
 
 export function PetStrip() {
   const pathname = usePathname();
+  const router = useRouter();
   const approvedCustomQuery = useQuery(api.customPets.listApproved);
   const [ownCustomIds, setOwnCustomIds] = useState<string[]>([]);
   useEffect(() => {
@@ -144,6 +156,24 @@ export function PetStrip() {
   const roamersRef = useRef<Roamer[]>([]);
   const [snapshot, setSnapshot] = useState<Record<string, SimState>>({});
 
+  // Speech bubbles are opt-in. Persist the choice so it sticks across visits.
+  const [chatter, setChatter] = useState(false);
+  const chatterRef = useRef(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setChatter(localStorage.getItem(CHATTER_KEY) === "on");
+  }, []);
+  useEffect(() => {
+    chatterRef.current = chatter;
+  }, [chatter]);
+  const toggleChatter = () => {
+    setChatter((on) => {
+      const next = !on;
+      localStorage.setItem(CHATTER_KEY, next ? "on" : "off");
+      return next;
+    });
+  };
+
   useEffect(() => {
     roamersRef.current = roamers;
   });
@@ -180,6 +210,8 @@ export function PetStrip() {
         frameToggle: 0,
         frameTimer: 0,
         pauseUntil: 0,
+        bubble: null,
+        bubbleUntil: 0,
       };
     });
     // Drop sim state for roamers that went away.
@@ -203,6 +235,8 @@ export function PetStrip() {
         if (!s) continue;
         const zone = zones[Math.min(s.zone, zones.length - 1)];
 
+        if (s.bubble && now >= s.bubbleUntil) s.bubble = null;
+
         if (now < s.pauseUntil) {
           s.frame = "idle";
           continue;
@@ -217,6 +251,11 @@ export function PetStrip() {
           s.ty = next.y;
           s.pauseUntil = now + 600 + Math.random() * 2200;
           s.frame = "idle";
+          // Stopping for a rest is a good moment to pipe up.
+          if (chatterRef.current && !s.bubble && Math.random() < BUBBLE_CHANCE) {
+            s.bubble = pickSound();
+            s.bubbleUntil = now + BUBBLE_MS;
+          }
           continue;
         }
 
@@ -242,31 +281,50 @@ export function PetStrip() {
   if (roamers.length === 0) return null;
 
   return (
-    <div
-      ref={containerRef}
-      aria-hidden
-      className="pointer-events-none fixed inset-0 z-40 overflow-hidden"
-    >
-      {roamers.map((r) => {
-        const s = snapshot[r.key];
-        if (!s) return null;
-        return (
-          <div
-            key={r.key}
-            className="absolute left-0 top-0 flex flex-col items-center"
-            style={{ transform: `translate(${s.x}px, ${s.y}px)` }}
-          >
-            <CustomPetSprite
-              frame={(s.frame === "walk2" ? r.frame2 : r.frame1) ?? r.frame1}
-              pixelSize={PET_SIZE / 32}
-              facingRight={s.facingRight}
-            />
-            <span className="mt-0.5 font-mono text-[9px] text-ink-soft">
-              {r.name}
-            </span>
-          </div>
-        );
-      })}
-    </div>
+    <>
+      <div
+        ref={containerRef}
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-40 overflow-hidden"
+      >
+        {roamers.map((r) => {
+          const s = snapshot[r.key];
+          if (!s) return null;
+          return (
+            <div
+              key={r.key}
+              onClick={() => router.push("/pets")}
+              title={`${r.name} — visit Pet Corner`}
+              className="pointer-events-auto absolute left-0 top-0 flex cursor-pointer flex-col items-center"
+              style={{ transform: `translate(${s.x}px, ${s.y}px)` }}
+            >
+              {s.bubble && (
+                <span className="mb-0.5 rounded-full border border-border bg-card px-1.5 py-0.5 font-mono text-[9px] leading-none text-ink shadow-sm">
+                  {s.bubble}
+                </span>
+              )}
+              <CustomPetSprite
+                frame={(s.frame === "walk2" ? r.frame2 : r.frame1) ?? r.frame1}
+                pixelSize={PET_SIZE / 32}
+                facingRight={s.facingRight}
+              />
+              <span className="mt-0.5 font-mono text-[9px] text-ink-soft">
+                {r.name}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <button
+        type="button"
+        onClick={toggleChatter}
+        aria-pressed={chatter}
+        title={chatter ? "Pet chatter on — click to mute" : "Pet chatter off — click to enable"}
+        className="fixed bottom-4 left-4 z-50 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-sm shadow-sm hover:text-accent"
+      >
+        {chatter ? "💬" : "🔇"}
+      </button>
+    </>
   );
 }
