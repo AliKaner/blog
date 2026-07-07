@@ -14,6 +14,8 @@ import { useAdminSession } from "@/components/providers/AdminSessionProvider";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 const EDITOR_PIXEL_SIZE = 6;
+const FULLSCREEN_MIN_PIXEL_SIZE = 8;
+const FULLSCREEN_MAX_PIXEL_SIZE = 26;
 const STORAGE_KEY = "my_custom_pet_ids";
 
 export function myCustomPetIds(): string[] {
@@ -183,10 +185,39 @@ export function PixelPetEditor({
   const paintingRef = useRef(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [fsPixelSize, setFsPixelSize] = useState(FULLSCREEN_MIN_PIXEL_SIZE);
 
   const frame = activeFrame === 1 ? frame1 : frame2;
   const setFrame = activeFrame === 1 ? setFrame1 : setFrame2;
-  const size = GRID_SIZE * EDITOR_PIXEL_SIZE;
+  const pixelSize = fullscreen ? fsPixelSize : EDITOR_PIXEL_SIZE;
+  const size = GRID_SIZE * pixelSize;
+
+  // While fullscreen, size the canvas to the available viewport instead of
+  // the fixed editor size, and keep it in sync as the window resizes.
+  useEffect(() => {
+    if (!fullscreen) return;
+    function measure() {
+      const availableHeight = window.innerHeight - 220;
+      const availableWidth = window.innerWidth * 0.6;
+      const next = Math.floor(Math.min(availableHeight, availableWidth) / GRID_SIZE);
+      setFsPixelSize(
+        Math.max(FULLSCREEN_MIN_PIXEL_SIZE, Math.min(FULLSCREEN_MAX_PIXEL_SIZE, next)),
+      );
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [fullscreen]);
+
+  useEffect(() => {
+    if (!fullscreen) return;
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === "Escape") setFullscreen(false);
+    }
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [fullscreen]);
 
   const MAX_HISTORY = 50;
   const historyRef = useRef<{
@@ -257,23 +288,18 @@ export function PixelPetEditor({
       for (let col = 0; col < GRID_SIZE; col++) {
         const cell = frame[row * GRID_SIZE + col];
         ctx.fillStyle = cell ?? "#1a1826";
-        ctx.fillRect(
-          col * EDITOR_PIXEL_SIZE,
-          row * EDITOR_PIXEL_SIZE,
-          EDITOR_PIXEL_SIZE,
-          EDITOR_PIXEL_SIZE,
-        );
+        ctx.fillRect(col * pixelSize, row * pixelSize, pixelSize, pixelSize);
       }
     }
     ctx.strokeStyle = "rgba(255,255,255,0.06)";
     for (let i = 0; i <= GRID_SIZE; i++) {
       ctx.beginPath();
-      ctx.moveTo(i * EDITOR_PIXEL_SIZE, 0);
-      ctx.lineTo(i * EDITOR_PIXEL_SIZE, size);
+      ctx.moveTo(i * pixelSize, 0);
+      ctx.lineTo(i * pixelSize, size);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(0, i * EDITOR_PIXEL_SIZE);
-      ctx.lineTo(size, i * EDITOR_PIXEL_SIZE);
+      ctx.moveTo(0, i * pixelSize);
+      ctx.lineTo(size, i * pixelSize);
       ctx.stroke();
     }
 
@@ -294,7 +320,7 @@ export function PixelPetEditor({
       }
       ctx.lineWidth = 1;
     }
-  }, [frame, size, mirrorX, mirrorY]);
+  }, [frame, size, pixelSize, mirrorX, mirrorY]);
 
   function cellFromPointer(
     clientX: number,
@@ -443,8 +469,22 @@ export function PixelPetEditor({
   return (
     <form
       onSubmit={handleSubmit}
-      className="panel flex flex-col gap-4 p-6"
+      className={
+        fullscreen
+          ? "fixed inset-0 z-[100] flex flex-col gap-4 overflow-auto bg-paper p-6"
+          : "panel flex flex-col gap-4 p-6"
+      }
     >
+      {fullscreen && (
+        <button
+          type="button"
+          onClick={() => setFullscreen(false)}
+          className="btn fixed right-4 top-4 z-[110] px-3 py-1.5 text-sm"
+          title="Exit fullscreen (Esc)"
+        >
+          ✕ Exit fullscreen
+        </button>
+      )}
       <div className="flex flex-wrap items-start gap-6">
         <div>
           <canvas
@@ -530,6 +570,16 @@ export function PixelPetEditor({
             >
               Import PNG
             </button>
+            {!fullscreen && (
+              <button
+                type="button"
+                onClick={() => setFullscreen(true)}
+                className="btn px-2 py-1 text-xs"
+                title="Open a bigger canvas to paint on"
+              >
+                ⛶ Fullscreen
+              </button>
+            )}
             <input
               ref={fileInputRef}
               type="file"
