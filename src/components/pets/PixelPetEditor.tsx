@@ -261,6 +261,22 @@ export function PixelPetEditor({
     setFrame(direction === "horizontal" ? flipHorizontal(frame) : flipVertical(frame));
   }
 
+  // The editor now stays mounted across "Hide pet painter" toggles (so
+  // in-progress work survives), which means a successful submit would
+  // otherwise strand the visitor on the "thanks" screen forever — this is
+  // the only way back to a blank canvas without a full page reload.
+  function resetForNewPet() {
+    setFrame1(emptyFrame());
+    setFrame2(emptyFrame());
+    setActiveFrame(1);
+    setName("");
+    setLink("");
+    setSay("");
+    setError(null);
+    historyRef.current = { 1: [], 2: [] };
+    setSubmitted(false);
+  }
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null;
@@ -455,6 +471,13 @@ export function PixelPetEditor({
           approval. It will join the yard once approved, and you can already
           see it below.
         </p>
+        <button
+          type="button"
+          onClick={resetForNewPet}
+          className="btn mt-4 px-4 py-2 text-sm"
+        >
+          Paint another pet
+        </button>
       </div>
     );
   }
