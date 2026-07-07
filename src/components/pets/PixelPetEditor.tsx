@@ -3,7 +3,12 @@
 import { useMutation } from "convex/react";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../../../convex/_generated/api";
-import { emptyFrame, GRID_SIZE, NEON_PALETTE } from "@/lib/customPetGrid";
+import {
+  emptyFrame,
+  GRID_SIZE,
+  NEON_PALETTE,
+  TOTAL_CELLS,
+} from "@/lib/customPetGrid";
 import { CustomPetSprite } from "./CustomPetSprite";
 import { useAdminSession } from "@/components/providers/AdminSessionProvider";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -24,6 +29,112 @@ export function myCustomPetIds(): string[] {
 function rememberCustomPetId(id: string) {
   const ids = myCustomPetIds();
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids, id]));
+}
+
+type Tool = "brush" | "fill" | "eyedropper";
+type BrushSize = 1 | 2 | 3;
+
+const BRUSH_OFFSETS: Record<BrushSize, [number, number][]> = {
+  1: [[0, 0]],
+  2: [
+    [0, 0],
+    [0, 1],
+    [1, 0],
+    [1, 1],
+  ],
+  3: [
+    [-1, -1],
+    [-1, 0],
+    [-1, 1],
+    [0, -1],
+    [0, 0],
+    [0, 1],
+    [1, -1],
+    [1, 0],
+    [1, 1],
+  ],
+};
+
+// Every point a stroke at (row, col) should also touch given the active
+// mirror axes — dedupes so a cell on the axis itself isn't double-painted.
+function mirrorPoints(
+  row: number,
+  col: number,
+  mirrorX: boolean,
+  mirrorY: boolean,
+): [number, number][] {
+  const candidates: [number, number][] = [[row, col]];
+  if (mirrorX) candidates.push([row, GRID_SIZE - 1 - col]);
+  if (mirrorY) candidates.push([GRID_SIZE - 1 - row, col]);
+  if (mirrorX && mirrorY) {
+    candidates.push([GRID_SIZE - 1 - row, GRID_SIZE - 1 - col]);
+  }
+  const seen = new Set<string>();
+  const points: [number, number][] = [];
+  for (const [r, c] of candidates) {
+    const key = `${r},${c}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    points.push([r, c]);
+  }
+  return points;
+}
+
+function floodFill(
+  frame: (string | null)[],
+  startRow: number,
+  startCol: number,
+  newColor: string | null,
+): (string | null)[] {
+  const startIndex = startRow * GRID_SIZE + startCol;
+  const target = frame[startIndex];
+  if (target === newColor) return frame;
+  const next = [...frame];
+  const stack: [number, number][] = [[startRow, startCol]];
+  while (stack.length > 0) {
+    const [r, c] = stack.pop()!;
+    if (r < 0 || r >= GRID_SIZE || c < 0 || c >= GRID_SIZE) continue;
+    const index = r * GRID_SIZE + c;
+    if (next[index] !== target) continue;
+    next[index] = newColor;
+    stack.push([r + 1, c], [r - 1, c], [r, c + 1], [r, c - 1]);
+  }
+  return next;
+}
+
+function flipHorizontal(frame: (string | null)[]): (string | null)[] {
+  const next = new Array<string | null>(TOTAL_CELLS);
+  for (let row = 0; row < GRID_SIZE; row++) {
+    for (let col = 0; col < GRID_SIZE; col++) {
+      next[row * GRID_SIZE + col] = frame[row * GRID_SIZE + (GRID_SIZE - 1 - col)];
+    }
+  }
+  return next;
+}
+
+function flipVertical(frame: (string | null)[]): (string | null)[] {
+  const next = new Array<string | null>(TOTAL_CELLS);
+  for (let row = 0; row < GRID_SIZE; row++) {
+    for (let col = 0; col < GRID_SIZE; col++) {
+      next[row * GRID_SIZE + col] = frame[(GRID_SIZE - 1 - row) * GRID_SIZE + col];
+    }
+  }
+  return next;
+}
+
+function floodFillMirrored(
+  frame: (string | null)[],
+  row: number,
+  col: number,
+  newColor: string | null,
+  mirrorX: boolean,
+  mirrorY: boolean,
+): (string | null)[] {
+  let result = frame;
+  for (const [r, c] of mirrorPoints(row, col, mirrorX, mirrorY)) {
+    result = floodFill(result, r, c, newColor);
+  }
+  return result;
 }
 
 type PixelPetEditorProps = {
@@ -58,6 +169,11 @@ export function PixelPetEditor({
   );
   const [activeFrame, setActiveFrame] = useState<1 | 2>(1);
   const [color, setColor] = useState<string | null>(NEON_PALETTE[0]);
+  const [customColor, setCustomColor] = useState("#ffffff");
+  const [tool, setTool] = useState<Tool>("brush");
+  const [brushSize, setBrushSize] = useState<BrushSize>(1);
+  const [mirrorX, setMirrorX] = useState(false);
+  const [mirrorY, setMirrorY] = useState(false);
   const [name, setName] = useState(initialName);
   const [link, setLink] = useState(initialLink);
   const [say, setSay] = useState(initialSay);
@@ -66,6 +182,7 @@ export function PixelPetEditor({
   const [error, setError] = useState<string | null>(null);
   const paintingRef = useRef(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const frame = activeFrame === 1 ? frame1 : frame2;
   const setFrame = activeFrame === 1 ? setFrame1 : setFrame2;
@@ -77,13 +194,16 @@ export function PixelPetEditor({
     2: (string | null)[][];
   }>({ 1: [], 2: [] });
 
-  // Kept in sync after every render (not during) so the keydown handler
-  // below always reads the current frame without needing to resubscribe.
+  // Kept in sync after every render (not during) so the keydown handler and
+  // the async PNG-import callback always read the current frame without
+  // needing to resubscribe or risking a stale closure.
   const activeFrameRef = useRef(activeFrame);
   const setFrameRef = useRef(setFrame);
+  const frameRef = useRef(frame);
   useEffect(() => {
     activeFrameRef.current = activeFrame;
     setFrameRef.current = setFrame;
+    frameRef.current = frame;
   });
 
   function pushHistory(frameNum: 1 | 2, snapshot: (string | null)[]) {
@@ -97,6 +217,17 @@ export function PixelPetEditor({
     const hist = historyRef.current[current];
     const prev = hist.pop();
     if (prev) setFrameRef.current(prev);
+  }
+
+  function clearFrame() {
+    if (!confirm("Clear this frame? You can still undo right after.")) return;
+    pushHistory(activeFrame, frame);
+    setFrame(emptyFrame());
+  }
+
+  function flip(direction: "horizontal" | "vertical") {
+    pushHistory(activeFrame, frame);
+    setFrame(direction === "horizontal" ? flipHorizontal(frame) : flipVertical(frame));
   }
 
   useEffect(() => {
@@ -145,29 +276,82 @@ export function PixelPetEditor({
       ctx.lineTo(size, i * EDITOR_PIXEL_SIZE);
       ctx.stroke();
     }
-  }, [frame, size]);
 
-  function paintAt(clientX: number, clientY: number) {
+    if (mirrorX || mirrorY) {
+      ctx.strokeStyle = "rgba(147,51,234,0.55)";
+      ctx.lineWidth = 1.5;
+      if (mirrorX) {
+        ctx.beginPath();
+        ctx.moveTo(size / 2, 0);
+        ctx.lineTo(size / 2, size);
+        ctx.stroke();
+      }
+      if (mirrorY) {
+        ctx.beginPath();
+        ctx.moveTo(0, size / 2);
+        ctx.lineTo(size, size / 2);
+        ctx.stroke();
+      }
+      ctx.lineWidth = 1;
+    }
+  }, [frame, size, mirrorX, mirrorY]);
+
+  function cellFromPointer(
+    clientX: number,
+    clientY: number,
+  ): { row: number; col: number } | null {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
     const x = clientX - rect.left;
     const y = clientY - rect.top;
     const col = Math.floor((x / rect.width) * GRID_SIZE);
     const row = Math.floor((y / rect.height) * GRID_SIZE);
-    if (col < 0 || col >= GRID_SIZE || row < 0 || row >= GRID_SIZE) return;
-    const index = row * GRID_SIZE + col;
+    if (col < 0 || col >= GRID_SIZE || row < 0 || row >= GRID_SIZE) return null;
+    return { row, col };
+  }
+
+  function paintAt(clientX: number, clientY: number) {
+    const cell = cellFromPointer(clientX, clientY);
+    if (!cell) return;
+    const { row, col } = cell;
+
+    if (tool === "eyedropper") {
+      const picked = frame[row * GRID_SIZE + col];
+      setColor(picked);
+      if (picked) setCustomColor(picked);
+      return;
+    }
+
+    if (tool === "fill") {
+      setFrame((prev) =>
+        floodFillMirrored(prev, row, col, color, mirrorX, mirrorY),
+      );
+      return;
+    }
+
     setFrame((prev) => {
-      if (prev[index] === color) return prev;
       const next = [...prev];
-      next[index] = color;
-      return next;
+      let changed = false;
+      for (const [pr, pc] of mirrorPoints(row, col, mirrorX, mirrorY)) {
+        for (const [dr, dc] of BRUSH_OFFSETS[brushSize]) {
+          const r = pr + dr;
+          const c = pc + dc;
+          if (r < 0 || r >= GRID_SIZE || c < 0 || c >= GRID_SIZE) continue;
+          const index = r * GRID_SIZE + c;
+          if (next[index] !== color) {
+            next[index] = color;
+            changed = true;
+          }
+        }
+      }
+      return changed ? next : prev;
     });
   }
 
   function handlePointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
-    paintingRef.current = true;
-    pushHistory(activeFrame, frame);
+    if (tool !== "eyedropper") pushHistory(activeFrame, frame);
+    if (tool === "brush") paintingRef.current = true;
     paintAt(e.clientX, e.clientY);
   }
   function handlePointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
@@ -176,6 +360,44 @@ export function PixelPetEditor({
   }
   function stopPainting() {
     paintingRef.current = false;
+  }
+
+  function importPng(file: File) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const off = document.createElement("canvas");
+        off.width = GRID_SIZE;
+        off.height = GRID_SIZE;
+        const octx = off.getContext("2d", { willReadFrequently: true });
+        if (!octx) return;
+        octx.imageSmoothingEnabled = false;
+        octx.clearRect(0, 0, GRID_SIZE, GRID_SIZE);
+        // Fit the source image inside the 32x32 grid, centered, preserving
+        // its aspect ratio rather than stretching it.
+        const scale = Math.min(GRID_SIZE / img.width, GRID_SIZE / img.height);
+        const w = img.width * scale;
+        const h = img.height * scale;
+        octx.drawImage(img, (GRID_SIZE - w) / 2, (GRID_SIZE - h) / 2, w, h);
+        const data = octx.getImageData(0, 0, GRID_SIZE, GRID_SIZE).data;
+        const next: (string | null)[] = new Array(TOTAL_CELLS).fill(null);
+        for (let i = 0; i < TOTAL_CELLS; i++) {
+          const a = data[i * 4 + 3];
+          if (a < 32) continue;
+          const r = data[i * 4];
+          const g = data[i * 4 + 1];
+          const b = data[i * 4 + 2];
+          next[i] =
+            "#" +
+            [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
+        }
+        pushHistory(activeFrameRef.current, frameRef.current);
+        setFrameRef.current(next);
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -211,6 +433,13 @@ export function PixelPetEditor({
     );
   }
 
+  const cursorClass =
+    tool === "eyedropper"
+      ? "cursor-copy"
+      : tool === "fill"
+        ? "cursor-cell"
+        : "cursor-crosshair";
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -222,14 +451,14 @@ export function PixelPetEditor({
             ref={canvasRef}
             width={size}
             height={size}
-            className="cursor-crosshair rounded-sm border border-border touch-none"
+            className={`rounded-sm border border-border touch-none ${cursorClass}`}
             style={{ width: size, height: size, imageRendering: "pixelated" }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={stopPainting}
             onPointerLeave={stopPainting}
           />
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             {([1, 2] as const).map((n) => (
               <button
                 key={n}
@@ -269,15 +498,141 @@ export function PixelPetEditor({
             >
               ↺ Undo
             </button>
+            <button
+              type="button"
+              onClick={clearFrame}
+              className="btn px-2 py-1 text-xs"
+              title="Wipe this frame"
+            >
+              Clear Frame
+            </button>
+            <button
+              type="button"
+              onClick={() => flip("horizontal")}
+              className="btn px-2 py-1 text-xs"
+              title="Flip this frame left-right"
+            >
+              Flip ↔
+            </button>
+            <button
+              type="button"
+              onClick={() => flip("vertical")}
+              className="btn px-2 py-1 text-xs"
+              title="Flip this frame top-bottom"
+            >
+              Flip ↕
+            </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="btn px-2 py-1 text-xs"
+              title="Import a PNG as a rough starting point for this frame — totally optional"
+            >
+              Import PNG
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) importPng(file);
+                e.target.value = "";
+              }}
+            />
           </div>
+          <p className="mt-1 font-mono text-[10px] text-ink-soft">
+            Import is optional — it just squashes the image into 32×32 as a
+            rough base to paint over, it won&apos;t come out perfect.
+          </p>
         </div>
 
         <div className="flex flex-col gap-3">
           <div>
             <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
+              Tool
+            </p>
+            <div className="mt-1 flex gap-1.5">
+              {(
+                [
+                  { id: "brush", label: "Brush" },
+                  { id: "fill", label: "Fill" },
+                  { id: "eyedropper", label: "Eyedropper" },
+                ] as const
+              ).map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setTool(t.id)}
+                  className={`btn px-2 py-1 text-xs ${tool === t.id ? "text-accent" : ""}`}
+                  style={{
+                    borderColor: tool === t.id ? "var(--accent)" : undefined,
+                  }}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {tool === "brush" && (
+            <div>
+              <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
+                Brush size
+              </p>
+              <div className="mt-1 flex gap-1.5">
+                {([1, 2, 3] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setBrushSize(s)}
+                    className={`flex h-7 w-7 items-center justify-center rounded-sm border-2 font-mono text-xs ${
+                      brushSize === s ? "text-accent" : "text-ink-soft"
+                    }`}
+                    style={{
+                      borderColor:
+                        brushSize === s ? "var(--accent)" : "var(--border)",
+                    }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
+              Symmetry
+            </p>
+            <div className="mt-1 flex gap-1.5">
+              <button
+                type="button"
+                onClick={() => setMirrorX((v) => !v)}
+                className={`btn px-2 py-1 text-xs ${mirrorX ? "text-accent" : ""}`}
+                style={{ borderColor: mirrorX ? "var(--accent)" : undefined }}
+                title="Mirror left-right"
+              >
+                Mirror ↔
+              </button>
+              <button
+                type="button"
+                onClick={() => setMirrorY((v) => !v)}
+                className={`btn px-2 py-1 text-xs ${mirrorY ? "text-accent" : ""}`}
+                style={{ borderColor: mirrorY ? "var(--accent)" : undefined }}
+                title="Mirror top-bottom"
+              >
+                Mirror ↕
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <p className="font-mono text-xs uppercase tracking-wide text-ink-soft">
               Color
             </p>
-            <div className="mt-1 flex flex-wrap gap-1.5">
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
               {NEON_PALETTE.map((swatch) => (
                 <button
                   key={swatch}
@@ -291,6 +646,20 @@ export function PixelPetEditor({
                   }}
                 />
               ))}
+              <input
+                type="color"
+                value={customColor}
+                onChange={(e) => {
+                  setCustomColor(e.target.value);
+                  setColor(e.target.value);
+                }}
+                className="h-7 w-9 cursor-pointer rounded-sm border-2 bg-transparent p-0"
+                style={{
+                  borderColor:
+                    color === customColor ? "var(--accent)" : "var(--border)",
+                }}
+                title="Pick any color"
+              />
             </div>
           </div>
 
