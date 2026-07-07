@@ -279,31 +279,6 @@ export function PetStrip() {
     return () => clearInterval(id);
   }, []);
 
-  // Click anywhere on empty page space to summon the pets to that spot.
-  // Clicks on links/buttons/pets themselves are left alone.
-  useEffect(() => {
-    const INTERACTIVE =
-      "a, button, input, textarea, select, label, [role='button'], [data-pet]";
-    const onClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target?.closest(INTERACTIVE)) return;
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      for (const r of roamersRef.current) {
-        const s = simRef.current[r.key];
-        if (!s) continue;
-        // Fan the pets out a little so they don't stack on one pixel.
-        const tx = e.clientX - PET_SIZE / 2 + randIn(-28, 28);
-        const ty = e.clientY - PET_SIZE / 2 + randIn(-28, 28);
-        s.tx = Math.max(EDGE, Math.min(vw - PET_SIZE - EDGE, tx));
-        s.ty = Math.max(TOP_INSET, Math.min(vh - PET_SIZE - EDGE, ty));
-        s.pauseUntil = 0;
-      }
-    };
-    document.addEventListener("click", onClick);
-    return () => document.removeEventListener("click", onClick);
-  }, []);
-
   // Pet Corner has its own interactive yard, so keep the roaming margin
   // companions off that page — only the yard pets should show there.
   if (pathname === "/pets") return null;
