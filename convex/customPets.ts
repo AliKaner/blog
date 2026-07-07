@@ -17,13 +17,37 @@ function assertValidFrame(frame: (string | null)[], label: string) {
   }
 }
 
+// Visitor-supplied, so keep it safe: only http(s) links, capped length.
+// Returns undefined for empty/invalid input (which clears the field on patch).
+function sanitizeLink(raw?: string): string | undefined {
+  if (!raw) return undefined;
+  let s = raw.trim();
+  if (!s) return undefined;
+  if (!/^https?:\/\//i.test(s)) s = `https://${s}`;
+  try {
+    const url = new URL(s);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return undefined;
+    return url.toString().slice(0, 300);
+  } catch {
+    return undefined;
+  }
+}
+
+function sanitizeSay(raw?: string): string | undefined {
+  if (!raw) return undefined;
+  const s = raw.replace(/\s+/g, " ").trim().slice(0, 40);
+  return s || undefined;
+}
+
 export const submit = mutation({
   args: {
     name: v.string(),
     frame1: frameValidator,
     frame2: frameValidator,
+    link: v.optional(v.string()),
+    say: v.optional(v.string()),
   },
-  handler: async (ctx, { name, frame1, frame2 }) => {
+  handler: async (ctx, { name, frame1, frame2, link, say }) => {
     const trimmedName = name.trim().slice(0, 24);
     if (!trimmedName) throw new Error("Give your pet a name");
     assertValidFrame(frame1, "frame1");
@@ -33,6 +57,8 @@ export const submit = mutation({
       name: trimmedName,
       frame1,
       frame2,
+      link: sanitizeLink(link),
+      say: sanitizeSay(say),
       hunger: 100,
       happiness: 100,
       lastFedAt: now,
@@ -56,6 +82,8 @@ export const listApproved = query({
       name: p.name,
       frame1: p.frame1,
       frame2: p.frame2,
+      link: p.link,
+      say: p.say,
       published: p.published,
       ...computeEffective(p, now),
       totalFeeds: p.totalFeeds,
@@ -76,6 +104,8 @@ export const getByIds = query({
         name: p.name,
         frame1: p.frame1,
         frame2: p.frame2,
+        link: p.link,
+        say: p.say,
         published: p.published,
         ...computeEffective(p, now),
         totalFeeds: p.totalFeeds,
@@ -121,14 +151,22 @@ export const update = mutation({
     name: v.string(),
     frame1: frameValidator,
     frame2: frameValidator,
+    link: v.optional(v.string()),
+    say: v.optional(v.string()),
   },
-  handler: async (ctx, { token, id, name, frame1, frame2 }) => {
+  handler: async (ctx, { token, id, name, frame1, frame2, link, say }) => {
     await requireAdmin(ctx, token);
     const trimmedName = name.trim().slice(0, 24);
     if (!trimmedName) throw new Error("Give this pet a name");
     assertValidFrame(frame1, "frame1");
     assertValidFrame(frame2, "frame2");
-    await ctx.db.patch(id, { name: trimmedName, frame1, frame2 });
+    await ctx.db.patch(id, {
+      name: trimmedName,
+      frame1,
+      frame2,
+      link: sanitizeLink(link),
+      say: sanitizeSay(say),
+    });
   },
 });
 

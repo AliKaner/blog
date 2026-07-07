@@ -36,6 +36,8 @@ type Roamer = {
   frame1: (string | null)[];
   frame2: (string | null)[];
   speed: number;
+  link?: string; // clicking the pet goes here (falls back to /pets)
+  say?: string; // custom bubble text (falls back to a random sound)
 };
 
 type SimState = {
@@ -145,6 +147,8 @@ export function PetStrip() {
         frame1: p.frame1,
         frame2: p.frame2,
         speed: speedFromId(p._id),
+        link: p.link ?? undefined,
+        say: p.say ?? undefined,
       });
     }
     return list;
@@ -253,7 +257,7 @@ export function PetStrip() {
           s.frame = "idle";
           // Stopping for a rest is a good moment to pipe up.
           if (chatterRef.current && !s.bubble && Math.random() < BUBBLE_CHANCE) {
-            s.bubble = pickSound();
+            s.bubble = r.say ?? pickSound();
             s.bubbleUntil = now + BUBBLE_MS;
           }
           continue;
@@ -275,6 +279,31 @@ export function PetStrip() {
     return () => clearInterval(id);
   }, []);
 
+  // Click anywhere on empty page space to summon the pets to that spot.
+  // Clicks on links/buttons/pets themselves are left alone.
+  useEffect(() => {
+    const INTERACTIVE =
+      "a, button, input, textarea, select, label, [role='button'], [data-pet]";
+    const onClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest(INTERACTIVE)) return;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      for (const r of roamersRef.current) {
+        const s = simRef.current[r.key];
+        if (!s) continue;
+        // Fan the pets out a little so they don't stack on one pixel.
+        const tx = e.clientX - PET_SIZE / 2 + randIn(-28, 28);
+        const ty = e.clientY - PET_SIZE / 2 + randIn(-28, 28);
+        s.tx = Math.max(EDGE, Math.min(vw - PET_SIZE - EDGE, tx));
+        s.ty = Math.max(TOP_INSET, Math.min(vh - PET_SIZE - EDGE, ty));
+        s.pauseUntil = 0;
+      }
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, []);
+
   // Pet Corner has its own interactive yard, so keep the roaming margin
   // companions off that page — only the yard pets should show there.
   if (pathname === "/pets") return null;
@@ -293,8 +322,16 @@ export function PetStrip() {
           return (
             <div
               key={r.key}
-              onClick={() => router.push("/pets")}
-              title={`${r.name} — visit Pet Corner`}
+              data-pet
+              onClick={(e) => {
+                e.stopPropagation();
+                if (r.link) {
+                  window.open(r.link, "_blank", "noopener,noreferrer");
+                } else {
+                  router.push("/pets");
+                }
+              }}
+              title={r.link ? `${r.name} → ${r.link}` : `${r.name} — visit Pet Corner`}
               className="pointer-events-auto absolute left-0 top-0 flex cursor-pointer flex-col items-center"
               style={{ transform: `translate(${s.x}px, ${s.y}px)` }}
             >

@@ -142,6 +142,9 @@ export default defineSchema({
     name: v.string(),
     frame1: v.array(v.union(v.string(), v.null())),
     frame2: v.array(v.union(v.string(), v.null())),
+    // Optional: where clicking the pet goes, and what it says in its bubble.
+    link: v.optional(v.string()),
+    say: v.optional(v.string()),
     hunger: v.number(),
     happiness: v.number(),
     lastFedAt: v.number(),

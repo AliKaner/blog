@@ -36,6 +36,8 @@ export default function AdminCustomPetsPage() {
             initialName={editing.name}
             initialFrame1={editing.frame1}
             initialFrame2={editing.frame2}
+            initialLink={editing.link ?? ""}
+            initialSay={editing.say ?? ""}
             onSaved={() => setEditingId(null)}
           />
         </div>

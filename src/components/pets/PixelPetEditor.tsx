@@ -32,6 +32,8 @@ type PixelPetEditorProps = {
   initialName?: string;
   initialFrame1?: (string | null)[];
   initialFrame2?: (string | null)[];
+  initialLink?: string;
+  initialSay?: string;
   onSaved?: () => void;
 };
 
@@ -41,6 +43,8 @@ export function PixelPetEditor({
   initialName = "",
   initialFrame1,
   initialFrame2,
+  initialLink = "",
+  initialSay = "",
   onSaved,
 }: PixelPetEditorProps = {}) {
   const submit = useMutation(api.customPets.submit);
@@ -55,6 +59,8 @@ export function PixelPetEditor({
   const [activeFrame, setActiveFrame] = useState<1 | 2>(1);
   const [color, setColor] = useState<string | null>(NEON_PALETTE[0]);
   const [name, setName] = useState(initialName);
+  const [link, setLink] = useState(initialLink);
+  const [say, setSay] = useState(initialSay);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -179,10 +185,10 @@ export function PixelPetEditor({
     try {
       if (mode === "edit") {
         if (!petId || !token) throw new Error("Not authenticated");
-        await update({ token, id: petId, name, frame1, frame2 });
+        await update({ token, id: petId, name, frame1, frame2, link, say });
         onSaved?.();
       } else {
-        const id = await submit({ name, frame1, frame2 });
+        const id = await submit({ name, frame1, frame2, link, say });
         rememberCustomPetId(id);
         setSubmitted(true);
       }
@@ -316,6 +322,40 @@ export function PixelPetEditor({
               className="input mt-1"
               placeholder="Blorp"
             />
+          </label>
+
+          <label className="block">
+            <span className="block font-mono text-xs uppercase tracking-wide text-ink-soft">
+              Link <span className="normal-case opacity-60">(optional)</span>
+            </span>
+            <input
+              type="text"
+              inputMode="url"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              className="input mt-1"
+              placeholder="your-site.com"
+            />
+            <span className="mt-1 block font-mono text-[10px] text-ink-soft">
+              Where clicking the pet takes visitors.
+            </span>
+          </label>
+
+          <label className="block">
+            <span className="block font-mono text-xs uppercase tracking-wide text-ink-soft">
+              Says <span className="normal-case opacity-60">(optional)</span>
+            </span>
+            <input
+              type="text"
+              maxLength={40}
+              value={say}
+              onChange={(e) => setSay(e.target.value)}
+              className="input mt-1"
+              placeholder="hi there!"
+            />
+            <span className="mt-1 block font-mono text-[10px] text-ink-soft">
+              What it shows in its chat bubble.
+            </span>
           </label>
 
           <div className="flex items-center gap-3">
