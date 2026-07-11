@@ -68,6 +68,8 @@ export const create = mutation({
     description: v.optional(v.string()),
     imageStorageIds: v.optional(v.array(v.id("_storage"))),
     url: v.optional(v.string()),
+    githubUrl: v.optional(v.string()),
+    npmUrl: v.optional(v.string()),
     order: v.number(),
     published: v.boolean(),
   },
@@ -92,6 +94,8 @@ export const update = mutation({
     description: v.optional(v.string()),
     imageStorageIds: v.optional(v.array(v.id("_storage"))),
     url: v.optional(v.string()),
+    githubUrl: v.optional(v.string()),
+    npmUrl: v.optional(v.string()),
     order: v.number(),
     published: v.boolean(),
   },
@@ -104,7 +108,16 @@ export const update = mutation({
       (sid) => !(fields.imageStorageIds ?? []).includes(sid),
     );
     for (const sid of removedImageIds) await ctx.storage.delete(sid);
-    await ctx.db.patch(id, { ...fields, updatedAt: Date.now() });
+    // Spell out optional fields so clearing one in the form (arg omitted →
+    // undefined) removes it from the doc instead of keeping the old value.
+    await ctx.db.patch(id, {
+      ...fields,
+      description: fields.description,
+      url: fields.url,
+      githubUrl: fields.githubUrl,
+      npmUrl: fields.npmUrl,
+      updatedAt: Date.now(),
+    });
   },
 });
 

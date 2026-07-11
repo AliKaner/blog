@@ -47,6 +47,8 @@ export default function AdminProjectsPage() {
                     description: editing.description ?? "",
                     imageStorageIds: editing.imageStorageIds ?? [],
                     url: editing.url ?? "",
+                    githubUrl: editing.githubUrl ?? "",
+                    npmUrl: editing.npmUrl ?? "",
                     order: editing.order.toString(),
                     published: editing.published,
                   }
