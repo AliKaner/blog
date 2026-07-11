@@ -7,6 +7,7 @@ const STATIC_ROUTES = [
   "",
   "/journey",
   "/cv",
+  "/projects",
   "/movies",
   "/places",
   "/books",
