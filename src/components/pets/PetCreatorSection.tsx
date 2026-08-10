@@ -7,7 +7,7 @@ export function PetCreatorSection() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="mt-10">
+    <div className="mt-6">
       <button
         onClick={() => setOpen((v) => !v)}
         className="btn px-4 py-2 text-sm"
