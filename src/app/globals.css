@@ -112,11 +112,80 @@ a {
   border-radius: 4px;
   padding: 1em;
   overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.65;
 }
 
 .prose-blog pre code {
   border: none;
   padding: 0;
+  background: transparent;
+  font-size: inherit;
+  display: block;
+}
+
+/* Syntax highlighting (rehype-highlight / highlight.js), tuned to the
+   dark purple theme instead of a stock hljs stylesheet. */
+.prose-blog .hljs-comment,
+.prose-blog .hljs-quote {
+  color: #6c6488;
+  font-style: italic;
+}
+
+.prose-blog .hljs-keyword,
+.prose-blog .hljs-selector-tag,
+.prose-blog .hljs-doctag,
+.prose-blog .hljs-meta {
+  color: #c792ea;
+}
+
+.prose-blog .hljs-string,
+.prose-blog .hljs-regexp,
+.prose-blog .hljs-addition {
+  color: #a8d68a;
+}
+
+.prose-blog .hljs-number,
+.prose-blog .hljs-literal,
+.prose-blog .hljs-symbol,
+.prose-blog .hljs-bullet {
+  color: #f0a86a;
+}
+
+.prose-blog .hljs-title,
+.prose-blog .hljs-title.function_,
+.prose-blog .hljs-title.class_,
+.prose-blog .hljs-section,
+.prose-blog .hljs-name {
+  color: #8fb8ff;
+}
+
+.prose-blog .hljs-attr,
+.prose-blog .hljs-attribute,
+.prose-blog .hljs-variable,
+.prose-blog .hljs-template-variable,
+.prose-blog .hljs-selector-attr,
+.prose-blog .hljs-selector-class,
+.prose-blog .hljs-selector-id,
+.prose-blog .hljs-params {
+  color: #e0b7ff;
+}
+
+.prose-blog .hljs-built_in,
+.prose-blog .hljs-type {
+  color: #7fd6d0;
+}
+
+.prose-blog .hljs-deletion {
+  color: #f28fa5;
+}
+
+.prose-blog .hljs-emphasis {
+  font-style: italic;
+}
+
+.prose-blog .hljs-strong {
+  font-weight: 600;
 }
 
 /* Angular "panel" surface: cut corners instead of rounded ones, plus a hard

@@ -17,7 +17,6 @@ const ARRIVE_DIST = 4;
 const GUTTER_MIN = 64; // a side needs at least this much room to roam it
 const TOP_INSET = 72; // keep clear of the fixed site nav
 const EDGE = 8;
-const MAX_CUSTOM = 12; // cap so the margins never get too crowded
 const CHATTER_KEY = "petChatter"; // localStorage flag: speech bubbles on/off
 const BUBBLE_MS = 2000; // how long a bubble stays up
 const BUBBLE_CHANCE = 0.4; // odds a pet speaks when it stops to rest
@@ -140,7 +139,6 @@ export function PetStrip() {
     for (const p of customs) {
       if (seen.has(p._id)) continue;
       seen.add(p._id);
-      if (list.length >= MAX_CUSTOM) break;
       list.push({
         key: `custom-${p._id}`,
         name: p.name,

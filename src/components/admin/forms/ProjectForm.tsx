@@ -10,6 +10,8 @@ export type ProjectFormValues = {
   description: string;
   imageStorageIds: string[];
   url: string;
+  githubUrl: string;
+  npmUrl: string;
   order: string;
   published: boolean;
 };
@@ -20,6 +22,8 @@ const EMPTY: ProjectFormValues = {
   description: "",
   imageStorageIds: [],
   url: "",
+  githubUrl: "",
+  npmUrl: "",
   order: "0",
   published: false,
 };
@@ -39,6 +43,8 @@ export function ProjectForm({
     description?: string;
     imageStorageIds: string[];
     url?: string;
+    githubUrl?: string;
+    npmUrl?: string;
     order: number;
     published: boolean;
   }) => Promise<void>;
@@ -66,6 +72,8 @@ export function ProjectForm({
       description: values.description || undefined,
       imageStorageIds: values.imageStorageIds,
       url: values.url || undefined,
+      githubUrl: values.githubUrl || undefined,
+      npmUrl: values.npmUrl || undefined,
       order: Number(values.order) || 0,
       published: values.published,
     });
@@ -103,13 +111,31 @@ export function ProjectForm({
           className="input"
         />
       </Field>
-      <Field label="Link (optional)">
+      <Field label="Website (optional)">
         <input
           type="url"
           value={values.url}
           onChange={(e) => set("url", e.target.value)}
           className="input"
           placeholder="https://example.com"
+        />
+      </Field>
+      <Field label="GitHub (optional)">
+        <input
+          type="url"
+          value={values.githubUrl}
+          onChange={(e) => set("githubUrl", e.target.value)}
+          className="input"
+          placeholder="https://github.com/user/repo"
+        />
+      </Field>
+      <Field label="npm (optional)">
+        <input
+          type="url"
+          value={values.npmUrl}
+          onChange={(e) => set("npmUrl", e.target.value)}
+          className="input"
+          placeholder="https://www.npmjs.com/package/name"
         />
       </Field>
       <MultiImageUploader

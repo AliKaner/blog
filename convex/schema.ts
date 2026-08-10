@@ -130,6 +130,8 @@ export default defineSchema({
     description: v.optional(v.string()),
     imageStorageIds: v.optional(v.array(v.id("_storage"))),
     url: v.optional(v.string()),
+    githubUrl: v.optional(v.string()),
+    npmUrl: v.optional(v.string()),
     order: v.number(),
     published: v.boolean(),
     createdAt: v.number(),
