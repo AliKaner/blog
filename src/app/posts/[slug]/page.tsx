@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { api } from "../../../../convex/_generated/api";
 import { Markdown } from "@/components/Markdown";
 import { formatDate } from "@/lib/format";
+import { ZoomableImage } from "@/components/ui/Lightbox";
 
 export default async function PostPage({
   params,
@@ -20,10 +21,9 @@ export default async function PostPage({
       </div>
       <h1 className="mt-1 font-heading text-3xl text-ink">{post.title}</h1>
       {post.coverUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <ZoomableImage
           src={post.coverUrl}
-          alt=""
+          alt={post.title}
           className="mt-6 w-full rounded-sm border border-border object-cover"
         />
       )}

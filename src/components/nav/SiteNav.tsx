@@ -5,6 +5,7 @@ const LINKS = [
   { href: "/journey", label: "Journey" },
   { href: "/cv", label: "CV" },
   { href: "/projects", label: "Projects" },
+  { href: "/drawings", label: "Drawings" },
   { href: "/movies", label: "Movies" },
   { href: "/places", label: "Places" },
   { href: "/books", label: "Books" },

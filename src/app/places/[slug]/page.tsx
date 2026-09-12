@@ -2,6 +2,7 @@ import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import { api } from "../../../../convex/_generated/api";
 import { formatDate } from "@/lib/format";
+import { ZoomableImage } from "@/components/ui/Lightbox";
 
 export default async function PlacePage({
   params,
@@ -23,11 +24,10 @@ export default async function PlacePage({
       {place.photoUrls && place.photoUrls.length > 0 && (
         <div className="mt-6 flex flex-wrap gap-3">
           {place.photoUrls.map((url: string | null, i: number) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <ZoomableImage
               key={i}
               src={url ?? ""}
-              alt=""
+              alt={place.name}
               className="h-40 w-56 rounded-sm border border-border object-cover"
             />
           ))}

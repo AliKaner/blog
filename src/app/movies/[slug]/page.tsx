@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { api } from "../../../../convex/_generated/api";
 import { Markdown } from "@/components/Markdown";
 import { formatDate } from "@/lib/format";
+import { ZoomableImage } from "@/components/ui/Lightbox";
 
 export default async function MoviePage({
   params,
@@ -17,8 +18,7 @@ export default async function MoviePage({
     <article>
       <div className="flex gap-6">
         {movie.posterUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <ZoomableImage
             src={movie.posterUrl}
             alt={movie.title}
             className="h-48 w-32 shrink-0 rounded-sm border border-border object-cover"

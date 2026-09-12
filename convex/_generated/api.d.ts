@@ -11,6 +11,7 @@
 import type * as adminSessions from "../adminSessions.js";
 import type * as books from "../books.js";
 import type * as customPets from "../customPets.js";
+import type * as drawings from "../drawings.js";
 import type * as feed from "../feed.js";
 import type * as files from "../files.js";
 import type * as lib_requireAdmin from "../lib/requireAdmin.js";
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   adminSessions: typeof adminSessions;
   books: typeof books;
   customPets: typeof customPets;
+  drawings: typeof drawings;
   feed: typeof feed;
   files: typeof files;
   "lib/requireAdmin": typeof lib_requireAdmin;

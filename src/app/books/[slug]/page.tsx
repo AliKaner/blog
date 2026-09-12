@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { api } from "../../../../convex/_generated/api";
 import { Markdown } from "@/components/Markdown";
 import { formatDate } from "@/lib/format";
+import { ZoomableImage } from "@/components/ui/Lightbox";
 
 export default async function BookPage({
   params,
@@ -17,8 +18,7 @@ export default async function BookPage({
     <article>
       <div className="flex gap-6">
         {book.coverUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <ZoomableImage
             src={book.coverUrl}
             alt={book.title}
             className="h-48 w-32 shrink-0 rounded-sm border border-border object-cover"

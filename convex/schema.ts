@@ -140,6 +140,15 @@ export default defineSchema({
     .index("by_order", ["order"])
     .index("by_slug", ["slug"]),
 
+  drawings: defineTable({
+    title: v.optional(v.string()),
+    imageStorageId: v.id("_storage"),
+    order: v.number(),
+    published: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_order", ["order"]),
+
   customPets: defineTable({
     name: v.string(),
     frame1: v.array(v.union(v.string(), v.null())),

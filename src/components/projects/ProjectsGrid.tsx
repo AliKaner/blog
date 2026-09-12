@@ -1,3 +1,5 @@
+import { ZoomableImage } from "@/components/ui/Lightbox";
+
 type Project = {
   _id: string;
   title: string;
@@ -25,8 +27,7 @@ export function ProjectsGrid({ projects }: { projects: Project[] }) {
         return (
           <div key={project._id} className="panel flex h-full flex-col">
             {coverUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <ZoomableImage
                 src={coverUrl}
                 alt={project.title}
                 className="h-40 w-full object-cover"
