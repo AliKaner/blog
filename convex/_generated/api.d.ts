@@ -24,6 +24,8 @@ import type * as profile from "../profile.js";
 import type * as projects from "../projects.js";
 import type * as resumeItems from "../resumeItems.js";
 import type * as softwareLogs from "../softwareLogs.js";
+import type * as tutorials_articles from "../tutorials/articles.js";
+import type * as tutorials_topics from "../tutorials/topics.js";
 
 import type {
   ApiFromModules,
@@ -48,6 +50,8 @@ declare const fullApi: ApiFromModules<{
   projects: typeof projects;
   resumeItems: typeof resumeItems;
   softwareLogs: typeof softwareLogs;
+  "tutorials/articles": typeof tutorials_articles;
+  "tutorials/topics": typeof tutorials_topics;
 }>;
 
 /**

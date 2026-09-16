@@ -1,0 +1,147 @@
+"use client";
+
+import { useState } from "react";
+import { slugify } from "@/lib/format";
+
+export type TutorialTopicFormValues = {
+  title: string;
+  slug: string;
+  description: string;
+  order: string;
+  published: boolean;
+};
+
+const EMPTY: TutorialTopicFormValues = {
+  title: "",
+  slug: "",
+  description: "",
+  order: "0",
+  published: false,
+};
+
+export function TutorialTopicForm({
+  initial,
+  onSubmit,
+  onCancel,
+  submitting,
+}: {
+  initial?: Partial<TutorialTopicFormValues>;
+  onSubmit: (values: {
+    title: string;
+    slug: string;
+    description?: string;
+    order: number;
+    published: boolean;
+  }) => Promise<void>;
+  onCancel: () => void;
+  submitting: boolean;
+}) {
+  const [values, setValues] = useState<TutorialTopicFormValues>({
+    ...EMPTY,
+    ...initial,
+  });
+  const [slugTouched, setSlugTouched] = useState(!!initial?.slug);
+
+  function set<K extends keyof TutorialTopicFormValues>(
+    key: K,
+    val: TutorialTopicFormValues[K],
+  ) {
+    setValues((v) => ({ ...v, [key]: val }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await onSubmit({
+      title: values.title,
+      slug: values.slug,
+      description: values.description || undefined,
+      order: Number(values.order) || 0,
+      published: values.published,
+    });
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex max-w-md flex-col gap-4">
+      <Field label="Title">
+        <input
+          required
+          value={values.title}
+          onChange={(e) => {
+            set("title", e.target.value);
+            if (!slugTouched) set("slug", slugify(e.target.value));
+          }}
+          className="input"
+          placeholder="Videos, Tutorials…"
+        />
+      </Field>
+      <Field label="Slug">
+        <input
+          required
+          value={values.slug}
+          onChange={(e) => {
+            setSlugTouched(true);
+            set("slug", e.target.value);
+          }}
+          className="input"
+        />
+      </Field>
+      <Field label="Description (optional)">
+        <textarea
+          rows={3}
+          value={values.description}
+          onChange={(e) => set("description", e.target.value)}
+          className="input"
+        />
+      </Field>
+      <Field label="Sort order (lower shows first)">
+        <input
+          type="number"
+          value={values.order}
+          onChange={(e) => set("order", e.target.value)}
+          className="input"
+        />
+      </Field>
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={values.published}
+          onChange={(e) => set("published", e.target.checked)}
+        />
+        Published
+      </label>
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="btn px-4 py-2 text-sm disabled:opacity-50"
+        >
+          {submitting ? "Saving…" : "Save"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-sm text-ink-soft"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block">
+      <span className="block font-mono text-xs uppercase tracking-wide text-ink-soft">
+        {label}
+      </span>
+      <div className="mt-1">{children}</div>
+    </label>
+  );
+}

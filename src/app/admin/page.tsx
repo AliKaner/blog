@@ -8,6 +8,7 @@ const SECTIONS = [
   { href: "/admin/resume", label: "Experience & Education" },
   { href: "/admin/projects", label: "Projects" },
   { href: "/admin/drawings", label: "Drawings" },
+  { href: "/admin/tutorials", label: "Tutorials" },
   { href: "/admin/movies", label: "Movies" },
   { href: "/admin/cocktails", label: "Cocktails" },
   { href: "/admin/places", label: "Places" },

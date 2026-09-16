@@ -140,6 +140,37 @@ export default defineSchema({
     .index("by_order", ["order"])
     .index("by_slug", ["slug"]),
 
+  tutorialTopics: defineTable({
+    title: v.string(),
+    slug: v.string(),
+    description: v.optional(v.string()),
+    order: v.number(),
+    published: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_order", ["order"])
+    .index("by_slug", ["slug"]),
+
+  tutorialArticles: defineTable({
+    topicId: v.id("tutorialTopics"),
+    title: v.string(),
+    slug: v.string(),
+    // All content is optional: an entry can be a pasted video link, an
+    // uploaded video file, written markdown notes, or any mix of those.
+    body: v.optional(v.string()),
+    videoUrl: v.optional(v.string()),
+    videoStorageId: v.optional(v.id("_storage")),
+    coverStorageId: v.optional(v.id("_storage")),
+    order: v.number(),
+    publishedAt: v.number(),
+    published: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_topic_order", ["topicId", "order"])
+    .index("by_slug", ["slug"]),
+
   cocktails: defineTable({
     title: v.string(),
     slug: v.string(),

@@ -9,6 +9,7 @@ const STATIC_ROUTES = [
   "/cv",
   "/projects",
   "/drawings",
+  "/tutorials",
   "/movies",
   "/cocktails",
   "/places",
@@ -19,7 +20,7 @@ const STATIC_ROUTES = [
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [movies, places, books, softwareLogs, posts, cocktails] =
+  const [movies, places, books, softwareLogs, posts, cocktails, topics] =
     await Promise.all([
       fetchQuery(api.movies.list, {}),
       fetchQuery(api.places.list, {}),
@@ -27,7 +28,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       fetchQuery(api.softwareLogs.list, {}),
       fetchQuery(api.posts.list, {}),
       fetchQuery(api.cocktails.list, {}),
+      fetchQuery(api.tutorials.topics.list, {}),
     ]);
+
+  const topicArticleLists = await Promise.all(
+    topics.map((t) => fetchQuery(api.tutorials.articles.listByTopic, { topicSlug: t.slug })),
+  );
 
   const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.map((path) => ({
     url: `${SITE_URL}${path}`,
@@ -59,6 +65,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${SITE_URL}/cocktails/${c.slug}`,
       lastModified: new Date(c.updatedAt),
     })),
+    ...topics.map((t) => ({
+      url: `${SITE_URL}/tutorials/${t.slug}`,
+      lastModified: new Date(t.updatedAt),
+    })),
+    ...topicArticleLists.flatMap((data) =>
+      data
+        ? data.articles.map((a) => ({
+            url: `${SITE_URL}/tutorials/${data.topic.slug}/${a.slug}`,
+            lastModified: new Date(a.updatedAt),
+          }))
+        : [],
+    ),
   ];
 
   return [...staticEntries, ...dynamicEntries];
