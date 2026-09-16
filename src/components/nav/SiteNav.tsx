@@ -7,6 +7,7 @@ const LINKS = [
   { href: "/projects", label: "Projects" },
   { href: "/drawings", label: "Drawings" },
   { href: "/movies", label: "Movies" },
+  { href: "/cocktails", label: "Cocktails" },
   { href: "/places", label: "Places" },
   { href: "/books", label: "Books" },
   { href: "/dev-log", label: "Dev Log" },

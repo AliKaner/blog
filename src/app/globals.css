@@ -247,6 +247,24 @@ a {
   box-shadow: 1px 1px 0 0 var(--accent-2);
 }
 
+/* Cocktail "ticket" surface: a slightly tilted bar-tab card with a torn
+   dashed top edge, distinct from the panel/panel-sm cut-corner language
+   used everywhere else. Straightens and lifts on hover. */
+.ticket {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: 2px dashed var(--border);
+  transform: rotate(var(--tilt, 0deg));
+  box-shadow: 4px 4px 0 0 var(--accent-2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ticket:hover {
+  transform: rotate(0deg) translateY(-3px);
+  box-shadow: 6px 6px 0 0 var(--accent-2);
+}
+
 .input {
   width: 100%;
   border: 1px solid var(--border);

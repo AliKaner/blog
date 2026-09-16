@@ -10,6 +10,7 @@
 
 import type * as adminSessions from "../adminSessions.js";
 import type * as books from "../books.js";
+import type * as cocktails from "../cocktails.js";
 import type * as customPets from "../customPets.js";
 import type * as drawings from "../drawings.js";
 import type * as feed from "../feed.js";
@@ -33,6 +34,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   adminSessions: typeof adminSessions;
   books: typeof books;
+  cocktails: typeof cocktails;
   customPets: typeof customPets;
   drawings: typeof drawings;
   feed: typeof feed;

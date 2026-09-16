@@ -1,7 +1,7 @@
 import { query } from "./_generated/server";
 
 type FeedItem = {
-  type: "movie" | "place" | "book" | "softwareLog" | "post";
+  type: "movie" | "place" | "book" | "softwareLog" | "post" | "cocktail";
   id: string;
   slug: string;
   title: string;
@@ -14,7 +14,7 @@ type FeedItem = {
 export const getFeed = query({
   args: {},
   handler: async (ctx): Promise<FeedItem[]> => {
-    const [movies, places, books, logs, posts] = await Promise.all([
+    const [movies, places, books, logs, posts, cocktails] = await Promise.all([
       ctx.db
         .query("movies")
         .withIndex("by_published_watchedAt", (q) => q.eq("published", true))
@@ -38,6 +38,11 @@ export const getFeed = query({
       ctx.db
         .query("posts")
         .withIndex("by_published_publishedAt", (q) => q.eq("published", true))
+        .order("desc")
+        .collect(),
+      ctx.db
+        .query("cocktails")
+        .withIndex("by_published_triedAt", (q) => q.eq("published", true))
         .order("desc")
         .collect(),
     ]);
@@ -107,12 +112,27 @@ export const getFeed = query({
       })),
     );
 
+    const cocktailItems: FeedItem[] = await Promise.all(
+      cocktails.map(async (c) => ({
+        type: "cocktail" as const,
+        id: c._id,
+        slug: c.slug,
+        title: c.title,
+        date: c.triedAt,
+        rating: c.rating ?? null,
+        imageUrl: c.imageStorageId
+          ? await ctx.storage.getUrl(c.imageStorageId)
+          : null,
+      })),
+    );
+
     return [
       ...movieItems,
       ...placeItems,
       ...bookItems,
       ...logItems,
       ...postItems,
+      ...cocktailItems,
     ].sort((a, b) => b.date - a.date);
   },
 });

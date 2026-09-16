@@ -1,4 +1,10 @@
-export type FeedItemType = "movie" | "place" | "book" | "softwareLog" | "post";
+export type FeedItemType =
+  | "movie"
+  | "place"
+  | "book"
+  | "softwareLog"
+  | "post"
+  | "cocktail";
 
 export const FEED_TYPE_LABEL: Record<FeedItemType, string> = {
   movie: "Movie",
@@ -6,6 +12,7 @@ export const FEED_TYPE_LABEL: Record<FeedItemType, string> = {
   book: "Book",
   softwareLog: "Dev Log",
   post: "Post",
+  cocktail: "Cocktail",
 };
 
 export const FEED_TYPE_PATH: Record<FeedItemType, string> = {
@@ -14,4 +21,5 @@ export const FEED_TYPE_PATH: Record<FeedItemType, string> = {
   book: "/books",
   softwareLog: "/dev-log",
   post: "/posts",
+  cocktail: "/cocktails",
 };

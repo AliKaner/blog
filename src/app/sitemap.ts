@@ -10,6 +10,7 @@ const STATIC_ROUTES = [
   "/projects",
   "/drawings",
   "/movies",
+  "/cocktails",
   "/places",
   "/books",
   "/dev-log",
@@ -18,13 +19,15 @@ const STATIC_ROUTES = [
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [movies, places, books, softwareLogs, posts] = await Promise.all([
-    fetchQuery(api.movies.list, {}),
-    fetchQuery(api.places.list, {}),
-    fetchQuery(api.books.list, {}),
-    fetchQuery(api.softwareLogs.list, {}),
-    fetchQuery(api.posts.list, {}),
-  ]);
+  const [movies, places, books, softwareLogs, posts, cocktails] =
+    await Promise.all([
+      fetchQuery(api.movies.list, {}),
+      fetchQuery(api.places.list, {}),
+      fetchQuery(api.books.list, {}),
+      fetchQuery(api.softwareLogs.list, {}),
+      fetchQuery(api.posts.list, {}),
+      fetchQuery(api.cocktails.list, {}),
+    ]);
 
   const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.map((path) => ({
     url: `${SITE_URL}${path}`,
@@ -51,6 +54,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...posts.map((p) => ({
       url: `${SITE_URL}/posts/${p.slug}`,
       lastModified: new Date(p.updatedAt),
+    })),
+    ...cocktails.map((c) => ({
+      url: `${SITE_URL}/cocktails/${c.slug}`,
+      lastModified: new Date(c.updatedAt),
     })),
   ];
 

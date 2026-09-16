@@ -140,6 +140,22 @@ export default defineSchema({
     .index("by_order", ["order"])
     .index("by_slug", ["slug"]),
 
+  cocktails: defineTable({
+    title: v.string(),
+    slug: v.string(),
+    baseSpirit: v.optional(v.string()),
+    ingredients: v.optional(v.array(v.string())),
+    rating: v.optional(v.number()),
+    review: v.optional(v.string()),
+    imageStorageId: v.optional(v.id("_storage")),
+    triedAt: v.number(),
+    published: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_published_triedAt", ["published", "triedAt"])
+    .index("by_slug", ["slug"]),
+
   drawings: defineTable({
     title: v.optional(v.string()),
     imageStorageId: v.id("_storage"),
