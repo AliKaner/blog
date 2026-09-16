@@ -18,12 +18,12 @@ export default async function CocktailPage({
 
   return (
     <article className="ticket overflow-hidden" style={{ "--tilt": "0deg" } as React.CSSProperties}>
-      <div className="relative h-56 w-full bg-paper sm:h-72">
+      <div className="relative aspect-video w-full bg-paper">
         {cocktail.imageUrl ? (
           <ZoomableImage
             src={cocktail.imageUrl}
             alt={cocktail.title}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain p-4"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">

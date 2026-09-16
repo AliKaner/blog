@@ -35,13 +35,16 @@ export function CocktailTicketGrid({ cocktails }: { cocktails: Cocktail[] }) {
               className="ticket flex h-full flex-col overflow-hidden"
               style={{ "--tilt": `${TILTS[i % TILTS.length]}deg` } as React.CSSProperties}
             >
-              <div className="relative h-36 w-full shrink-0 bg-paper">
+              <div className="relative aspect-square w-full shrink-0 bg-paper">
                 {cocktail.imageUrl ? (
+                  // Full photo, never cropped — a portrait glass shot loses
+                  // its rim/garnish under object-cover, so letterbox it
+                  // instead of cutting it down to a thin cover-fit sliver.
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={cocktail.imageUrl}
                     alt={cocktail.title}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain p-3"
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center">
