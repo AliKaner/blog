@@ -15,8 +15,10 @@
   --ink: #314863;
   /* 82% keeps secondary text at ~4.6:1 on --paper (WCAG AA for body text). */
   --ink-soft: color-mix(in srgb, var(--ink) 82%, var(--paper));
-  --card: #d3e1f1;
-  --border: #7a9ec5;
+  /* Cards are plates of slightly lighter paper on the blue wall. */
+  --card: color-mix(in srgb, #fff 30%, #d3e1f1);
+  /* Rules are drawn in faded burgundy ink, never in a UI blue. */
+  --border: color-mix(in srgb, #6f3034 34%, #d3e1f1);
   --accent: #6f3034;
   --accent-2: #450e14;
 }
@@ -192,52 +194,208 @@ a {
 
 /* Soft "panel" surface: rounded corners and a gentle, neutral lift —
    calm rather than the hard-edged, neon-offset look of a HUD card. */
-.panel {
+.panel,
+.panel-sm {
+  --plate-inset: 4px;
   position: relative;
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 1px;
+  /* Plate mark: a second, fainter rule just inside the border, the way an
+     engraving's copper plate leaves a double line on the paper. */
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.2),
-    0 14px 30px -16px rgba(0, 0, 0, 0.55);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.panel:hover {
-  transform: translateY(-3px);
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.22),
-    0 20px 36px -16px rgba(0, 0, 0, 0.6);
+    inset 0 0 0 var(--plate-inset) var(--card),
+    inset 0 0 0 calc(var(--plate-inset) + 1px) color-mix(in srgb, var(--accent) 22%, transparent);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .panel-sm {
-  position: relative;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.18),
-    0 8px 18px -10px rgba(0, 0, 0, 0.5);
+  --plate-inset: 3px;
 }
 
+/* Interactive plates: the rules simply darken — no lifting cards. */
+.panel:hover,
+a.panel-sm:hover {
+  border-color: color-mix(in srgb, var(--accent) 75%, transparent);
+  box-shadow:
+    inset 0 0 0 var(--plate-inset) var(--card),
+    inset 0 0 0 calc(var(--plate-inset) + 1px) color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+/* Buttons: an engraved label rather than a filled block. Paper ground,
+   the same double plate-mark rule as the cards, inscription capitals in
+   burgundy, and a small rosette fleuron either side. Ink only floods in
+   on hover — the page stays line-and-letter at rest, like the plates. */
 .btn {
+  --btn-ink: var(--accent);
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6em;
+  background: var(--card);
+  color: var(--btn-ink);
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  border-radius: 1px;
+  box-shadow:
+    inset 0 0 0 2px var(--card),
+    inset 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.btn::before,
+.btn::after {
+  content: "";
+  width: 0.85em;
+  height: 0.85em;
+  flex-shrink: 0;
+  background-color: currentColor;
+  mask: url("/decor/ornaments/fleuron.webp") center / contain no-repeat;
+  -webkit-mask: url("/decor/ornaments/fleuron.webp") center / contain no-repeat;
+  opacity: 0.75;
+}
+
+/* Compact tool buttons skip the fleurons. */
+.btn-plain::before,
+.btn-plain::after {
+  content: none;
+}
+
+.btn-plain {
+  letter-spacing: 0.08em;
+}
+
+.btn:hover,
+.btn:focus-visible {
   background: var(--accent);
   color: var(--paper);
-  border: 1px solid var(--accent);
-  border-radius: 10px;
-  box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.5);
-  transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease;
-}
-
-.btn:hover {
-  transform: translateY(-1px);
-  opacity: 0.92;
+  box-shadow:
+    inset 0 0 0 2px var(--accent),
+    inset 0 0 0 3px color-mix(in srgb, var(--paper) 45%, transparent);
 }
 
 .btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px -4px rgba(0, 0, 0, 0.5);
+  background: var(--accent-2);
+}
+
+.btn:disabled {
+  cursor: default;
+}
+
+/* Orb button: at rest just a rosette (it can sit at the end of a heading's
+   rosette band as one more rosette). On hover/focus a shadowed plate grows
+   around it and the label unrolls to the right. Touch screens can't hover,
+   so there it stays open. */
+.btn-orb {
+  --orb: 2.3rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  height: var(--orb);
+  max-width: var(--orb);
+  padding: 0 0 0 calc((var(--orb) - 1.75rem) / 2);
+  overflow: hidden;
+  white-space: nowrap;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: transparent;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    max-width 0.5s cubic-bezier(0.34, 1.25, 0.64, 1),
+    padding 0.5s cubic-bezier(0.34, 1.25, 0.64, 1),
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.35s ease,
+    color 0.2s ease;
+}
+
+.btn-orb::before {
+  content: "";
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  background-color: var(--accent);
+  mask: url("/decor/ornaments/fleuron.webp") center / contain no-repeat;
+  -webkit-mask: url("/decor/ornaments/fleuron.webp") center / contain no-repeat;
+  transition: transform 0.6s cubic-bezier(0.34, 1.25, 0.64, 1);
+}
+
+.btn-orb:hover,
+.btn-orb:focus-visible,
+.btn-orb[aria-expanded="true"],
+.btn-orb[data-open="true"] {
+  max-width: 24rem;
+  padding-right: 1.1rem;
+  background: var(--card);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--accent);
+  box-shadow:
+    inset 0 0 0 2px var(--card),
+    inset 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent),
+    0 10px 22px -10px rgb(40 20 20 / 0.45);
+  transition-delay: 0s, 0s, 0s, 0s, 0s, 0.12s;
+}
+
+.btn-orb:hover::before,
+.btn-orb:focus-visible::before,
+.btn-orb[aria-expanded="true"]::before,
+.btn-orb[data-open="true"]::before {
+  transform: rotate(120deg);
+}
+
+@media (hover: none) {
+  .btn-orb {
+    max-width: 24rem;
+    padding-right: 1.1rem;
+    background: var(--card);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    color: var(--accent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-orb,
+  .btn-orb::before {
+    transition: none;
+  }
+}
+
+/* Secondary links: no box — a Garamond-italic line over a double rule,
+   like a cross-reference in a printed catalogue. */
+.link-ornate {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35em;
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 1.15em;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 3px double color-mix(in srgb, var(--accent) 40%, transparent);
+  padding-bottom: 1px;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.link-ornate:hover,
+.link-ornate:focus-visible {
+  color: var(--accent-2);
+  border-bottom-color: var(--accent);
 }
 
 /* Cocktail "ticket" surface: a slightly tilted bar-tab card with a torn
@@ -247,260 +405,34 @@ a {
   background: var(--card);
   border: 1px solid var(--border);
   border-top: 2px dashed var(--border);
-  border-radius: 12px;
+  border-radius: 1px;
   transform: rotate(var(--tilt, 0deg));
-  box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 8px 16px -12px rgb(40 20 20 / 0.35);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .ticket:hover {
-  transform: rotate(0deg) translateY(-3px);
-  box-shadow: 0 16px 28px -12px rgba(0, 0, 0, 0.6);
+  transform: rotate(0deg);
+  box-shadow: 0 10px 18px -12px rgb(40 20 20 / 0.4);
 }
 
 .input {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--paper);
+  border-radius: 1px;
+  background: var(--card);
   color: var(--ink);
   padding: 0.5rem 0.75rem;
   outline: none;
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 
+/* Focus: the rule turns to full ink and doubles, like the plate mark. */
 .input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
-}
-
-/* Floating icon rail: liquid-glass — translucent and blurred so whatever
-   sits behind it (the branch art, page content) shows through softly.
-   The rail and its hover bulge share one --glass fill so they read as a
-   single piece of material when the bulge morphs out of the rail. */
-.nav-shell {
-  /* Lifted toward white: --card equals --paper, so plain card glass would
-     vanish into the page. */
-  --glass: color-mix(in srgb, color-mix(in srgb, #fff 55%, var(--card)) 86%, transparent);
-  --glass-blur: blur(18px) saturate(160%);
-  --fillet: 14px;
-  --morph: cubic-bezier(0.34, 1.35, 0.64, 1);
-}
-
-.nav-rail {
-  background: var(--glass);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    0 10px 20px -8px rgba(0, 0, 0, 0.3),
-    0 28px 48px -20px rgba(0, 0, 0, 0.4);
-  scrollbar-width: none;
-}
-
-.nav-rail::-webkit-scrollbar {
-  display: none;
-}
-
-.nav-icon {
-  position: relative;
-  flex-shrink: 0;
-  border-radius: 9999px;
-  background: linear-gradient(145deg,
-      color-mix(in srgb, var(--card) 65%, transparent),
-      color-mix(in srgb, var(--card) 40%, transparent));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.08),
-    0 1px 2px rgba(0, 0, 0, 0.15);
-  transition:
-    color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.3s ease;
-}
-
-.nav-icon[data-hovered="true"] {
-  color: var(--accent);
-  background: linear-gradient(145deg,
-      color-mix(in srgb, var(--accent) 22%, transparent),
-      color-mix(in srgb, var(--card) 55%, transparent));
-}
-
-/* The page you're on: filled with the accent so it reads at a glance,
-   even while the rail is collapsed to icons only. */
-.nav-icon[aria-current="page"] {
-  color: var(--paper);
-  background: linear-gradient(145deg, var(--accent), var(--accent-2));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    0 4px 10px -4px color-mix(in srgb, var(--accent-2) 70%, transparent);
-}
-
-.nav-icon:active {
-  box-shadow:
-    inset 0 1px 2px rgba(0, 0, 0, 0.18),
-    0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-/* Hover morph — two nested layers (see SiteNav):
-   OUTER .nav-bulge: a glass tongue growing out of the rail's edge, joined to
-   it by two concave .nav-fillet pieces; .nav-corner squares off the rail's
-   rounded end when the first/last row is hovered.
-   INNER .nav-pill: the hovered icon button stretched out with its label.
-   Everything slides between rows and springs open/closed. */
-.nav-bulge,
-.nav-corner,
-.nav-fillet {
-  background: var(--glass);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-}
-
-.nav-bulge {
-  position: absolute;
-  width: var(--bulge-w, 0px);
-  border-radius: 0 9999px 9999px 0;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    10px 12px 22px -14px rgba(0, 0, 0, 0.45);
-  pointer-events: none;
-  transform-origin: left center;
-  transition:
-    top 0.4s var(--morph),
-    width 0.45s var(--morph),
-    opacity 0.2s ease,
-    transform 0.4s var(--morph);
-}
-
-.nav-fillet {
-  position: absolute;
-  left: 0;
-  width: var(--fillet);
-  height: var(--fillet);
-  transition: opacity 0.2s ease;
-}
-
-.nav-fillet-top {
-  bottom: 100%;
-  mask: radial-gradient(circle at 100% 0, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
-  -webkit-mask: radial-gradient(circle at 100% 0, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
-}
-
-.nav-fillet-bottom {
-  top: 100%;
-  mask: radial-gradient(circle at 100% 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
-  -webkit-mask: radial-gradient(circle at 100% 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
-}
-
-/* No fillet past the rail's ends — the corner piece takes over there. */
-.nav-bulge[data-first="true"] .nav-fillet-top,
-.nav-bulge[data-last="true"] .nav-fillet-bottom {
-  opacity: 0;
-}
-
-/* Only the area OUTSIDE the rail's rounded corner (the rail already fills
-   the quarter circle), so the glass isn't doubled. */
-.nav-corner {
-  position: absolute;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s ease, top 0.4s var(--morph);
-}
-
-.nav-corner[data-at="top"] {
-  mask: radial-gradient(circle at 0 100%, transparent 27.5px, #000 28px);
-  -webkit-mask: radial-gradient(circle at 0 100%, transparent 27.5px, #000 28px);
-}
-
-.nav-corner[data-at="bottom"] {
-  mask: radial-gradient(circle at 0 0, transparent 27.5px, #000 28px);
-  -webkit-mask: radial-gradient(circle at 0 0, transparent 27.5px, #000 28px);
-}
-
-.nav-shell[data-side="left"] .nav-corner[data-at="top"] {
-  mask: radial-gradient(circle at 100% 100%, transparent 27.5px, #000 28px);
-  -webkit-mask: radial-gradient(circle at 100% 100%, transparent 27.5px, #000 28px);
-}
-
-.nav-shell[data-side="left"] .nav-corner[data-at="bottom"] {
-  mask: radial-gradient(circle at 100% 0, transparent 27.5px, #000 28px);
-  -webkit-mask: radial-gradient(circle at 100% 0, transparent 27.5px, #000 28px);
-}
-
-.nav-shell[data-open="true"] .nav-corner[data-show="true"] {
-  opacity: 1;
-}
-
-.nav-pill {
-  position: absolute;
-  width: var(--pill-w);
-  overflow: hidden;
-  border-radius: 9999px;
-  color: var(--accent);
-  background: linear-gradient(145deg,
-      color-mix(in srgb, var(--accent) 16%, var(--glass)),
-      color-mix(in srgb, #fff 40%, var(--glass)));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.08),
-    0 2px 6px -2px rgba(0, 0, 0, 0.25);
-  transition:
-    top 0.4s var(--morph),
-    width 0.45s var(--morph),
-    opacity 0.18s ease;
-}
-
-.nav-pill[data-active="true"] {
-  color: var(--paper);
-  background: linear-gradient(145deg, var(--accent), var(--accent-2));
-}
-
-.nav-pill-label {
-  transition: opacity 0.2s ease 0.1s;
-}
-
-/* Closed: bulge folds into the rail, pill shrinks back onto its row. */
-.nav-shell[data-open="false"] .nav-bulge {
-  opacity: 0;
-  transform: scaleX(0.2);
-}
-
-.nav-shell[data-open="false"] .nav-pill {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.nav-shell[data-open="false"] .nav-pill-label {
-  opacity: 0;
-  transition-delay: 0s;
-}
-
-/* Appearing from nothing: snap to the row instead of sliding in. */
-.nav-shell[data-snap="true"] .nav-bulge,
-.nav-shell[data-snap="true"] .nav-pill,
-.nav-shell[data-snap="true"] .nav-corner {
-  transition-property: width, opacity, transform;
-}
-
-/* Mobile: the rail sits bottom-right, so everything mirrors leftward. */
-.nav-shell[data-side="left"] .nav-bulge {
-  border-radius: 9999px 0 0 9999px;
-  transform-origin: right center;
-}
-
-.nav-shell[data-side="left"] .nav-fillet {
-  left: auto;
-  right: 0;
-}
-
-.nav-shell[data-side="left"] .nav-fillet-top {
-  mask: radial-gradient(circle at 0 0, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
-  -webkit-mask: radial-gradient(circle at 0 0, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
-}
-
-.nav-shell[data-side="left"] .nav-fillet-bottom {
-  mask: radial-gradient(circle at 0 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
-  -webkit-mask: radial-gradient(circle at 0 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+    0 0 0 2px var(--paper),
+    0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 /* Engraved ornament bands (public/decor/ornaments, cut from Piranesi plates
@@ -598,6 +530,32 @@ main h1::after {
     radial-gradient(ellipse 34% 22% at 32% 22%, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0) 70%),
     radial-gradient(ellipse 20% 8% at 66% 84%, rgb(255 255 255 / 0.45), rgb(255 255 255 / 0) 70%);
   box-shadow: inset 0 2px 3px rgb(255 255 255 / 0.7);
+}
+
+/* "+1" that rises out of the orb on each click. */
+@keyframes pet-pop {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, -22px);
+  }
+}
+
+.pet-pop {
+  animation: pet-pop 0.7s ease-out forwards;
+}
+
+/* Level plaque under each orb: burgundy enamel with a hairline rim. */
+.pet-badge {
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+  border-radius: 2px;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.18),
+    0 2px 4px -2px rgb(40 20 20 / 0.5);
 }
 
 .pet-plinth-collar {

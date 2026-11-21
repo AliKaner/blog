@@ -108,13 +108,7 @@ function Cell({ week }: { week: Week }) {
     <div className="group relative hover:z-20" style={{ height: CELL, width: CELL }}>
       <div style={{ height: CELL, width: CELL, background: cellColor(count) }} />
       <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 hidden w-56 -translate-x-1/2 group-hover:block">
-        <div
-          className="rounded-lg border border-border p-2.5"
-          style={{
-            background: "var(--card)",
-            boxShadow: "0 10px 24px -12px rgba(0, 0, 0, 0.6)",
-          }}
-        >
+        <div className="panel-sm p-2.5 drop-shadow-[0_8px_12px_rgb(40_20_20/0.25)]">
           <p className="font-mono text-[10px] uppercase tracking-wide text-accent">
             {formatDate(week.start)} – {formatDate(weekEnd)}
           </p>

@@ -17,6 +17,7 @@ import type * as feed from "../feed.js";
 import type * as files from "../files.js";
 import type * as lib_requireAdmin from "../lib/requireAdmin.js";
 import type * as movies from "../movies.js";
+import type * as petTaps from "../petTaps.js";
 import type * as pets from "../pets.js";
 import type * as places from "../places.js";
 import type * as posts from "../posts.js";
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   files: typeof files;
   "lib/requireAdmin": typeof lib_requireAdmin;
   movies: typeof movies;
+  petTaps: typeof petTaps;
   pets: typeof pets;
   places: typeof places;
   posts: typeof posts;

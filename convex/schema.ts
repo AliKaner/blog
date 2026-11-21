@@ -210,4 +210,11 @@ export default defineSchema({
     published: v.boolean(),
     createdAt: v.number(),
   }).index("by_published", ["published"]),
+
+  // How many times visitors have clicked each pet in the cabinet. Kept out
+  // of the pet documents so frequent taps don't invalidate the pet lists.
+  petTaps: defineTable({
+    petId: v.union(v.id("pets"), v.id("customPets")),
+    count: v.number(),
+  }).index("by_petId", ["petId"]),
 });

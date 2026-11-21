@@ -13,11 +13,8 @@ export default async function HomePage() {
     <div className="flex min-h-[calc(100vh-14rem)] flex-col justify-center">
       <ProfileHeader profile={profile} />
       <div className="mt-8">
-        <Link
-          href="/projects"
-          className="btn inline-block px-4 py-2 text-sm no-underline"
-        >
-          Personal Projects →
+        <Link href="/projects" className="link-ornate">
+          Personal projects <span aria-hidden>→</span>
         </Link>
       </div>
     </div>

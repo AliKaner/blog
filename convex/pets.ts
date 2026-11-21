@@ -16,6 +16,7 @@ export const listPets = query({
       _id: p._id,
       kind: p.kind,
       name: p.name,
+      addedAt: p._creationTime,
       ...computeEffective(p, now),
       totalFeeds: p.totalFeeds,
       canFeedAt: p.lastFedAt + FEED_COOLDOWN_MS,

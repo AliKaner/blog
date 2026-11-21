@@ -547,7 +547,7 @@ export function PixelPetEditor({
                   pushHistory(2, frame2);
                   setFrame2([...frame1]);
                 }}
-                className="btn px-2 py-1 text-xs"
+                className="btn btn-plain px-2 py-1 text-xs"
                 title="Copy Frame 1 into Frame 2 as a starting point"
               >
                 Copy Frame 1 →
@@ -556,7 +556,7 @@ export function PixelPetEditor({
             <button
               type="button"
               onClick={undo}
-              className="btn px-2 py-1 text-xs"
+              className="btn btn-plain px-2 py-1 text-xs"
               title="Undo (Ctrl+Z)"
             >
               ↺ Undo
@@ -564,7 +564,7 @@ export function PixelPetEditor({
             <button
               type="button"
               onClick={clearFrame}
-              className="btn px-2 py-1 text-xs"
+              className="btn btn-plain px-2 py-1 text-xs"
               title="Wipe this frame"
             >
               Clear Frame
@@ -572,7 +572,7 @@ export function PixelPetEditor({
             <button
               type="button"
               onClick={() => flip("horizontal")}
-              className="btn px-2 py-1 text-xs"
+              className="btn btn-plain px-2 py-1 text-xs"
               title="Flip this frame left-right"
             >
               Flip ↔
@@ -580,7 +580,7 @@ export function PixelPetEditor({
             <button
               type="button"
               onClick={() => flip("vertical")}
-              className="btn px-2 py-1 text-xs"
+              className="btn btn-plain px-2 py-1 text-xs"
               title="Flip this frame top-bottom"
             >
               Flip ↕
@@ -588,7 +588,7 @@ export function PixelPetEditor({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="btn px-2 py-1 text-xs"
+              className="btn btn-plain px-2 py-1 text-xs"
               title="Import a PNG as a rough starting point for this frame — totally optional"
             >
               Import PNG
@@ -597,7 +597,7 @@ export function PixelPetEditor({
               <button
                 type="button"
                 onClick={() => setFullscreen(true)}
-                className="btn px-2 py-1 text-xs"
+                className="btn btn-plain px-2 py-1 text-xs"
                 title="Open a bigger canvas to paint on"
               >
                 ⛶ Fullscreen
