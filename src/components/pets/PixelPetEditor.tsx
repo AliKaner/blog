@@ -261,7 +261,7 @@ export function PixelPetEditor({
     setFrame(direction === "horizontal" ? flipHorizontal(frame) : flipVertical(frame));
   }
 
-  // The editor now stays mounted across "Hide pet painter" toggles (so
+  // The editor now stays mounted across "Close the painter" toggles (so
   // in-progress work survives), which means a successful submit would
   // otherwise strand the visitor on the "thanks" screen forever — this is
   // the only way back to a blank canvas without a full page reload.
@@ -468,15 +468,15 @@ export function PixelPetEditor({
       <div className="panel p-6 text-center">
         <p className="text-ink">
           Thanks — <span className="text-accent">{name}</span> is waiting for
-          approval. It will join the yard once approved, and you can already
-          see it below.
+          approval. It will join the keepsakes once approved, and you can
+          already see it below.
         </p>
         <button
           type="button"
           onClick={resetForNewPet}
           className="btn mt-4 px-4 py-2 text-sm"
         >
-          Paint another pet
+          Paint another
         </button>
       </div>
     );
@@ -754,7 +754,7 @@ export function PixelPetEditor({
 
           <label className="block">
             <span className="block font-mono text-xs uppercase tracking-wide text-ink-soft">
-              Pet name
+              Name
             </span>
             <input
               required

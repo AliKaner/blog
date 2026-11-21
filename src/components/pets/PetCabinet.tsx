@@ -7,7 +7,7 @@ import type { Id } from "../../../convex/_generated/dataModel";
 import { PetSprite } from "./PetSprite";
 import { CustomPetSprite } from "./CustomPetSprite";
 import { myCustomPetIds } from "./PixelPetEditor";
-import type { PetKind } from "./spriteData";
+import type { Frame, PetKind } from "./spriteData";
 import { GRID_SIZE } from "@/lib/customPetGrid";
 import { petLevel } from "@/lib/petLevel";
 
@@ -25,10 +25,27 @@ type CabinetPet = {
   origin: "builtin" | "custom";
   kind?: PetKind;
   frame1?: (string | null)[];
+  frame2?: (string | null)[];
   published?: boolean;
 };
 
-const ORB_SPRITE = 64; // px the pet is drawn at inside the orb
+const ORB_SPRITE = 48; // px the pet is drawn at inside the orb
+const FRAME_MS = 420; // how long each animation frame shows
+
+// Built-in sprites trot in place; custom ones alternate their two frames.
+const BUILTIN_CYCLE: Frame[] = ["idle", "walk1", "idle", "walk2"];
+
+/** One shared clock for every orb's animation (instead of an interval per
+    pet). Stays at 0 for visitors who prefer reduced motion. */
+function useAnimationTick(): number {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = setInterval(() => setTick((t) => t + 1), FRAME_MS);
+    return () => clearInterval(id);
+  }, []);
+  return tick;
+}
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
@@ -61,6 +78,7 @@ function useCabinetPets(): CabinetPet[] | undefined {
       addedAt: p.addedAt,
       origin: "custom",
       frame1: p.frame1,
+      frame2: p.frame2,
       published: p.published,
     });
   }
@@ -90,20 +108,33 @@ export function PetCabinet() {
     return () => clearInterval(id);
   }, []);
 
-  if (!pets) return <p className="text-ink-soft">Loading pets…</p>;
+  const tick = useAnimationTick();
+
+  if (!pets) return <p className="text-ink-soft">Opening the cabinet…</p>;
   if (pets.length === 0)
-    return <p className="text-ink-soft">The cabinet is empty — paint the first pet above.</p>;
+    return <p className="text-ink-soft">The cabinet is empty — paint the first keepsake above.</p>;
 
   return (
     <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-4">
-      {pets.map((pet) => (
-        <PetCell key={pet._id} pet={pet} taps={taps?.[pet._id] ?? 0} now={now} />
+      {pets.map((pet, i) => (
+        // Offset by position so the orbs don't all step in unison.
+        <PetCell key={pet._id} pet={pet} taps={taps?.[pet._id] ?? 0} now={now} tick={tick + i} />
       ))}
     </div>
   );
 }
 
-function PetCell({ pet, taps, now }: { pet: CabinetPet; taps: number; now: number }) {
+function PetCell({
+  pet,
+  taps,
+  now,
+  tick,
+}: {
+  pet: CabinetPet;
+  taps: number;
+  now: number;
+  tick: number;
+}) {
   const tap = useMutation(api.petTaps.tap);
   // Bumped on every click: keys the "+1" so each click replays it.
   const [pops, setPops] = useState(0);
@@ -125,11 +156,18 @@ function PetCell({ pet, taps, now }: { pet: CabinetPet; taps: number; now: numbe
       >
         <Orb>
           {pet.origin === "builtin" && pet.kind ? (
-            <span className="block [&_canvas]:!h-16 [&_canvas]:!w-16">
-              <PetSprite kind={pet.kind} frame="idle" facingRight />
+            <span className="block [&_canvas]:!h-12 [&_canvas]:!w-12">
+              <PetSprite
+                kind={pet.kind}
+                frame={BUILTIN_CYCLE[tick % BUILTIN_CYCLE.length] ?? "idle"}
+                facingRight
+              />
             </span>
           ) : pet.frame1 ? (
-            <CustomPetSprite frame={pet.frame1} pixelSize={ORB_SPRITE / GRID_SIZE} />
+            <CustomPetSprite
+              frame={tick % 2 === 1 && pet.frame2 ? pet.frame2 : pet.frame1}
+              pixelSize={ORB_SPRITE / GRID_SIZE}
+            />
           ) : null}
         </Orb>
         {pops > 0 && (

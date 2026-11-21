@@ -50,7 +50,7 @@ export default function AdminCustomPetsPage() {
       <h1 className="font-heading text-2xl text-ink">Custom Pets</h1>
       <p className="mt-1 text-sm text-ink-soft">
         Visitor-submitted pixel pets. Approve to make them appear for
-        everyone in the Pet Corner.
+        everyone in Keepsakes.
       </p>
       <div className="mt-6 flex flex-col gap-2">
         {pets.map((pet) => (

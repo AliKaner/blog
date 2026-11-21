@@ -23,7 +23,7 @@ export function PetCreatorSection() {
         aria-expanded={open}
         className="btn-orb absolute left-[calc(min(100%,220px)+0.5rem)] top-[calc(3.85rem-1.15rem)]"
       >
-        {open ? "Hide pet painter" : "Paint your own pet"}
+        {open ? "Close the painter" : "Paint a keepsake"}
       </button>
       {everOpened && (
         <div className={`mt-4 ${open ? "" : "hidden"}`}>

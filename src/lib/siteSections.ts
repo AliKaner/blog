@@ -1,4 +1,5 @@
 import {
+  Amphora,
   BookOpen,
   Clapperboard,
   Compass,
@@ -10,7 +11,6 @@ import {
   MapPin,
   Martini,
   Newspaper,
-  PawPrint,
   Pencil,
   Terminal,
   type LucideIcon,
@@ -37,5 +37,5 @@ export const SITE_SECTIONS: SiteSection[] = [
   { href: "/books", label: "Books", icon: BookOpen },
   { href: "/dev-log", label: "Dev Log", icon: Terminal },
   { href: "/posts", label: "Posts", icon: Newspaper },
-  { href: "/pets", label: "Pet Corner", icon: PawPrint },
+  { href: "/keepsakes", label: "Keepsakes", icon: Amphora },
 ];

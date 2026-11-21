@@ -16,7 +16,7 @@ const STATIC_ROUTES = [
   "/books",
   "/dev-log",
   "/posts",
-  "/pets",
+  "/keepsakes",
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
