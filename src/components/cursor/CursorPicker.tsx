@@ -215,12 +215,38 @@ export function CursorPicker() {
   );
 }
 
+/* Over anything clickable the cursor turns over like a proof pulled in
+   reverse — paper body, burgundy line work — so links still announce
+   themselves the way the pointing hand would. */
+const inverted = (svg: string) =>
+  svg.replaceAll(INK, "\u0000").replaceAll(PAPER, INK).replaceAll(DEEP, INK).replaceAll("\u0000", PAPER);
+
+const CLICKABLE = [
+  "a[href]",
+  "button:not(:disabled)",
+  "summary",
+  "select",
+  "label[for]",
+  '[role="button"]',
+  '[role="link"]',
+  '[role="radio"]',
+  '[role="tab"]',
+  '[role="menuitem"]',
+  'input[type="checkbox"]',
+  'input[type="radio"]',
+  'input[type="submit"]',
+  'input[type="button"]',
+];
+
 const cursorRules = (Object.keys(ART) as (keyof typeof ART)[])
   .map((id) => {
     const { svg, hot } = ART[id];
     const sel = `html[data-cursor="${id}"]`;
-    return `${sel}, ${sel} * { cursor: ${cursorUrl(svg)} ${hot[0]} ${hot[1]}, auto !important; }
-${sel} input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), ${sel} textarea, ${sel} [contenteditable="true"] { cursor: text !important; }`;
+    const at = `${hot[0]} ${hot[1]}`;
+    const clickable = CLICKABLE.flatMap((c) => [`${sel} ${c}`, `${sel} ${c} *`]).join(", ");
+    return `${sel}, ${sel} * { cursor: ${cursorUrl(svg)} ${at}, auto !important; }
+${clickable} { cursor: ${cursorUrl(inverted(svg))} ${at}, pointer !important; }
+${sel} input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]), ${sel} textarea, ${sel} [contenteditable="true"] { cursor: text !important; }`;
   })
   .join("\n");
 
