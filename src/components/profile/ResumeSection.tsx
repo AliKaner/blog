@@ -60,24 +60,30 @@ function ResumeColumn({
                 <Markdown>{item.description}</Markdown>
               </div>
             )}
+            {/* Stack reads like the "medium" line on a museum label. */}
             {item.stack && item.stack.length > 0 && (
-              <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
-                <span className="font-mono text-ink-soft uppercase tracking-wider mr-1">Stack:</span>
-                {item.stack.map((tech) => (
-                  <span key={tech} className="rounded-sm bg-card border border-border px-2 py-0.5 text-ink-soft font-mono">
-                    {tech}
-                  </span>
-                ))}
-              </div>
+              <p className="mt-3 flex flex-wrap items-baseline gap-x-2">
+                <SmallLabel>Stack</SmallLabel>
+                <span className="font-accent text-base italic text-ink">
+                  {item.stack.map((tech, i) => (
+                    <span key={tech}>
+                      {i > 0 && (
+                        <span aria-hidden className="mx-1.5 text-accent/60">
+                          ·
+                        </span>
+                      )}
+                      {tech}
+                    </span>
+                  ))}
+                </span>
+              </p>
             )}
             {item.projects && item.projects.length > 0 && (
-              <div className="mt-4 flex flex-col gap-2">
-                <span className="font-mono text-xs uppercase tracking-wider text-ink-soft">
-                  Projects
-                </span>
-                <div className="flex flex-wrap gap-2">
+              <div className="mt-5">
+                <SmallLabel>Projects</SmallLabel>
+                <div className="mt-3 flex flex-wrap gap-x-6 gap-y-5">
                   {item.projects.map((project, i) => (
-                    <SubProjectCard key={i} project={project} />
+                    <SubProjectPlate key={i} project={project} />
                   ))}
                 </div>
               </div>
@@ -131,19 +137,36 @@ function OrganizationLine({ item }: { item: ResumeItem }) {
   );
 }
 
-function SubProjectCard({ project }: { project: SubProject }) {
+function SmallLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="font-heading text-[11px] uppercase tracking-[0.18em] text-ink-soft">
+      {children}
+    </span>
+  );
+}
+
+/** A project screenshot hung like a small print, its name as the plate
+    caption underneath. */
+function SubProjectPlate({ project }: { project: SubProject }) {
   const inner = (
-    <div className="panel-sm flex w-40 flex-col overflow-hidden">
+    <figure className="group flex w-44 flex-col">
       {project.imageUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={project.imageUrl}
           alt={project.name}
-          className="h-20 w-full object-cover"
+          className="frame frame-sm h-24 w-full object-cover object-top transition-[filter] duration-200 group-hover:brightness-105"
         />
       )}
-      <p className="px-2 py-1.5 text-xs text-ink">{project.name}</p>
-    </div>
+      <figcaption className="mt-2 text-center font-accent text-sm italic text-ink transition-colors group-hover:text-accent">
+        {project.name}
+        {project.url && (
+          <span aria-hidden className="ml-1 not-italic text-accent/70">
+            ↗
+          </span>
+        )}
+      </figcaption>
+    </figure>
   );
 
   if (!project.url) return inner;
@@ -154,6 +177,7 @@ function SubProjectCard({ project }: { project: SubProject }) {
       target="_blank"
       rel="noopener noreferrer"
       className="no-underline"
+      aria-label={`${project.name} (opens in a new tab)`}
     >
       {inner}
     </a>
