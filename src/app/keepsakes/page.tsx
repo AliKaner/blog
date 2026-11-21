@@ -1,5 +1,8 @@
 import { PetCabinet } from "@/components/pets/PetCabinet";
 import { PetCreatorSection } from "@/components/pets/PetCreatorSection";
+import { sectionMetadata } from "@/lib/seo";
+
+export const metadata = sectionMetadata("/keepsakes");
 
 export default function KeepsakesPage() {
   return (

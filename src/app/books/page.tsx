@@ -1,6 +1,9 @@
 import { fetchQuery } from "convex/nextjs";
 import { api } from "../../../convex/_generated/api";
 import { JourneyTimeline } from "@/components/feed/JourneyTimeline";
+import { sectionMetadata } from "@/lib/seo";
+
+export const metadata = sectionMetadata("/books");
 
 export default async function BooksPage() {
   const books = await fetchQuery(api.books.list, {});

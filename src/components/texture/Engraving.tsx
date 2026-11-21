@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import type { CSSProperties } from "react";
-import { SITE_SECTIONS } from "@/lib/siteSections";
+import sectionMeta from "@/lib/sectionMeta.json";
 
 /* An engraved antiquity standing in the right-hand gutter, a different
    one per site section, crossfading on navigation. The images are Piranesi
@@ -45,18 +45,21 @@ const table = (stops: number[]) => stops.map((v) => (v / 255).toFixed(3)).join("
 
 const NAMES = Object.keys(ENGRAVINGS) as EngravingName[];
 
-/** Sections take the engravings in turn, in nav order; sub-pages
-    (/posts/some-slug) use their section's; anything else gets the first. */
+const isEngraving = (name: string): name is EngravingName => name in ENGRAVINGS;
+
+/** Each section's engraving is set in src/lib/sectionMeta.json (the same
+    data the share images are built from); sub-pages (/posts/some-slug)
+    use their section's; anything else gets the first. */
 function engravingFor(pathname: string): EngravingName {
-  let index = 0;
-  SITE_SECTIONS.forEach((section, i) => {
-    const match =
+  let match: string = NAMES[0] ?? "candelabrum";
+  for (const section of sectionMeta.sections) {
+    const hit =
       section.href === "/"
         ? pathname === "/"
         : pathname === section.href || pathname.startsWith(`${section.href}/`);
-    if (match) index = i;
-  });
-  return NAMES[index % NAMES.length];
+    if (hit) match = section.engraving;
+  }
+  return isEngraving(match) ? match : "candelabrum";
 }
 
 export function Engraving() {

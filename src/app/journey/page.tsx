@@ -2,6 +2,9 @@ import { fetchQuery } from "convex/nextjs";
 import { api } from "../../../convex/_generated/api";
 import { JourneyHeatmap } from "@/components/feed/JourneyHeatmap";
 import { JourneyTimeline } from "@/components/feed/JourneyTimeline";
+import { sectionMetadata } from "@/lib/seo";
+
+export const metadata = sectionMetadata("/journey");
 
 function currentTimestamp() {
   return Date.now();

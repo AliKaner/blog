@@ -1,0 +1,22 @@
+{
+  "home": {
+    "description": "Ali Kaner — Senior Fullstack Developer. Former game developer building full-stack products with TypeScript, React, Next.js and Node.js.",
+    "subtitle": "Senior Fullstack Developer"
+  },
+  "sections": [
+    { "href": "/", "title": "Home", "description": "Ali Kaner — Senior Fullstack Developer.", "engraving": "candelabrum" },
+    { "href": "/journey", "title": "Journey", "description": "Everything I've watched, read and visited, on one timeline.", "engraving": "victory" },
+    { "href": "/cv", "title": "CV", "description": "Experience, education and the tools I work with.", "engraving": "trophy" },
+    { "href": "/projects", "title": "Projects", "description": "Things I've built on my own time.", "engraving": "vase" },
+    { "href": "/components", "title": "Components", "description": "UI pieces I've built — live, and copyable.", "engraving": "griffin" },
+    { "href": "/drawings", "title": "Drawings", "description": "Sketches and doodles, hung as a print wall.", "engraving": "ivy" },
+    { "href": "/tutorials", "title": "Tutorials", "description": "Guides, in video and in writing.", "engraving": "cinerary" },
+    { "href": "/movies", "title": "Movies", "description": "Films I've watched, with ratings.", "engraving": "ramhead" },
+    { "href": "/cocktails", "title": "Cocktails", "description": "Tasting notes from the home bar.", "engraving": "candelabrum" },
+    { "href": "/places", "title": "Places", "description": "Places I've been and liked.", "engraving": "victory" },
+    { "href": "/books", "title": "Books", "description": "What I've been reading.", "engraving": "trophy" },
+    { "href": "/dev-log", "title": "Dev Log", "description": "Short notes from building things.", "engraving": "vase" },
+    { "href": "/posts", "title": "Posts", "description": "Longer writing.", "engraving": "griffin" },
+    { "href": "/keepsakes", "title": "Keepsakes", "description": "Pixel pets kept under glass. Paint one of your own.", "engraving": "ivy" }
+  ]
+}

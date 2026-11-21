@@ -1,4 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#d3e1f1"/>
-  <text x="16" y="23" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="20" fill="#6f3034">A</text>
+  <!-- a tiny print plate: blue paper, double burgundy rule, an inscribed A -->
+  <rect width="32" height="32" rx="3" fill="#d3e1f1"/>
+  <rect x="1.25" y="1.25" width="29.5" height="29.5" rx="2" fill="none" stroke="#6f3034" stroke-opacity="0.75" stroke-width="1.5"/>
+  <rect x="4" y="4" width="24" height="24" fill="none" stroke="#6f3034" stroke-opacity="0.35" stroke-width="0.75"/>
+  <text x="16" y="23" text-anchor="middle" font-family="'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif" font-size="19" fill="#6f3034">A</text>
 </svg>

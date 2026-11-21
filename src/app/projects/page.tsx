@@ -1,6 +1,9 @@
 import { fetchQuery } from "convex/nextjs";
 import { api } from "../../../convex/_generated/api";
 import { ProjectsGrid } from "@/components/projects/ProjectsGrid";
+import { sectionMetadata } from "@/lib/seo";
+
+export const metadata = sectionMetadata("/projects");
 
 export default async function ProjectsPage() {
   const projects = await fetchQuery(api.projects.list, {});

@@ -1,6 +1,9 @@
 import { fetchQuery } from "convex/nextjs";
 import { api } from "../../../convex/_generated/api";
 import { TopicsGrid } from "@/components/tutorials/TopicsGrid";
+import { sectionMetadata } from "@/lib/seo";
+
+export const metadata = sectionMetadata("/tutorials");
 
 export default async function TutorialsPage() {
   const topics = await fetchQuery(api.tutorials.topics.list, {});

@@ -2,6 +2,9 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { componentRegistry } from "@/components/components/registry";
 import { ComponentsGrid } from "@/components/components/ComponentsGrid";
+import { sectionMetadata } from "@/lib/seo";
+
+export const metadata = sectionMetadata("/components");
 
 /** Source handed out by each copy button: the component file itself, read
     from disk (at build time — this page has no dynamic data). */

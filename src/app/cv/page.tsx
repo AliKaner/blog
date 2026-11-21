@@ -1,6 +1,9 @@
 import { fetchQuery } from "convex/nextjs";
 import { api } from "../../../convex/_generated/api";
 import { ResumeSection } from "@/components/profile/ResumeSection";
+import { sectionMetadata } from "@/lib/seo";
+
+export const metadata = sectionMetadata("/cv");
 
 export default async function CvPage() {
   const resumeItems = await fetchQuery(api.resumeItems.list, {});

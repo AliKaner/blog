@@ -1,6 +1,9 @@
 import { fetchQuery } from "convex/nextjs";
 import { api } from "../../../convex/_generated/api";
 import { JourneyTimeline } from "@/components/feed/JourneyTimeline";
+import { sectionMetadata } from "@/lib/seo";
+
+export const metadata = sectionMetadata("/dev-log");
 
 export default async function DevLogPage() {
   const logs = await fetchQuery(api.softwareLogs.list, {});

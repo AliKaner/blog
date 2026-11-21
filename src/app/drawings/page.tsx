@@ -1,6 +1,9 @@
 import { fetchQuery } from "convex/nextjs";
 import { api } from "../../../convex/_generated/api";
 import { DrawingsMasonry } from "@/components/drawings/DrawingsMasonry";
+import { sectionMetadata } from "@/lib/seo";
+
+export const metadata = sectionMetadata("/drawings");
 
 export default async function DrawingsPage() {
   const drawings = await fetchQuery(api.drawings.list, {});

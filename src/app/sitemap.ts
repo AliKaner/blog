@@ -2,22 +2,10 @@ import type { MetadataRoute } from "next";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "../../convex/_generated/api";
 import { SITE_URL } from "@/lib/site";
+import sectionMeta from "@/lib/sectionMeta.json";
 
-const STATIC_ROUTES = [
-  "",
-  "/journey",
-  "/cv",
-  "/projects",
-  "/drawings",
-  "/tutorials",
-  "/movies",
-  "/cocktails",
-  "/places",
-  "/books",
-  "/dev-log",
-  "/posts",
-  "/keepsakes",
-];
+// Every top-level section, from the same list the nav and metadata use.
+const STATIC_ROUTES = sectionMeta.sections.map((s) => (s.href === "/" ? "" : s.href));
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [movies, places, books, softwareLogs, posts, cocktails, topics] =

@@ -1,6 +1,9 @@
 import { fetchQuery } from "convex/nextjs";
 import { api } from "../../../convex/_generated/api";
 import { JourneyTimeline } from "@/components/feed/JourneyTimeline";
+import { sectionMetadata } from "@/lib/seo";
+
+export const metadata = sectionMetadata("/posts");
 
 export default async function PostsPage() {
   const posts = await fetchQuery(api.posts.list, {});

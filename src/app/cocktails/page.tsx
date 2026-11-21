@@ -1,6 +1,9 @@
 import { fetchQuery } from "convex/nextjs";
 import { api } from "../../../convex/_generated/api";
 import { CocktailTicketGrid } from "@/components/cocktails/CocktailTicketGrid";
+import { sectionMetadata } from "@/lib/seo";
+
+export const metadata = sectionMetadata("/cocktails");
 
 export default async function CocktailsPage() {
   const cocktails = await fetchQuery(api.cocktails.list, {});
