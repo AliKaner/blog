@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAdminSession } from "@/components/providers/AdminSessionProvider";
+import { StatsRefreshPanel } from "@/components/admin/StatsRefreshPanel";
 
 const SECTIONS = [
   { href: "/admin/profile", label: "Profile" },
@@ -28,6 +29,9 @@ export default function AdminDashboardPage() {
         <button onClick={logout} className="text-sm text-ink-soft hover:text-ink">
           Log out
         </button>
+      </div>
+      <div className="mt-8">
+        <StatsRefreshPanel />
       </div>
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {SECTIONS.map((s) => (

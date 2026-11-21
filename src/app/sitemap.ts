@@ -10,9 +10,9 @@ const STATIC_ROUTES = sectionMeta.sections.map((s) => (s.href === "/" ? "" : s.h
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [movies, places, books, softwareLogs, posts, cocktails, topics] =
     await Promise.all([
-      fetchQuery(api.movies.list, {}),
+      fetchQuery(api.movies.listSlugs, {}),
       fetchQuery(api.places.list, {}),
-      fetchQuery(api.books.list, {}),
+      fetchQuery(api.books.listSlugs, {}),
       fetchQuery(api.softwareLogs.list, {}),
       fetchQuery(api.posts.list, {}),
       fetchQuery(api.cocktails.list, {}),

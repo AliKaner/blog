@@ -15,7 +15,10 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_published_watchedAt", ["published", "watchedAt"])
-    .index("by_slug", ["slug"]),
+    // Sorting / filtering the public list by rating (then date).
+    .index("by_published_rating_watchedAt", ["published", "rating", "watchedAt"])
+    .index("by_slug", ["slug"])
+    .searchIndex("search_title", { searchField: "title", filterFields: ["published", "rating"] }),
 
   places: defineTable({
     name: v.string(),
@@ -44,7 +47,10 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_published_finishedAt", ["published", "finishedAt"])
-    .index("by_slug", ["slug"]),
+    // Sorting / filtering the public list by rating (then date).
+    .index("by_published_rating_finishedAt", ["published", "rating", "finishedAt"])
+    .index("by_slug", ["slug"])
+    .searchIndex("search_title", { searchField: "title", filterFields: ["published", "rating"] }),
 
   softwareLogs: defineTable({
     title: v.string(),
@@ -210,6 +216,27 @@ export default defineSchema({
     published: v.boolean(),
     createdAt: v.number(),
   }).index("by_published", ["published"]),
+
+  // Precomputed summary of a collection (movies, books) so list pages never
+  // scan every row. Rebuilt on demand from the admin ("Refresh stats"), not
+  // on every write — bulk imports would otherwise recompute it per row.
+  // Arrays are small and bounded (11 rating buckets, ≤12 months, ≤~15
+  // decades, one entry per year).
+  collectionStats: defineTable({
+    kind: v.union(v.literal("movies"), v.literal("books")),
+    total: v.number(),
+    thisYear: v.number(),
+    rated: v.number(),
+    ratingSum: v.number(),
+    /** counts per whole-number rating band 0..10 (8 = 8.0–8.9) */
+    ratingHistogram: v.array(v.number()),
+    /** last 12 months, oldest first; month = "YYYY-MM" */
+    perMonth: v.array(v.object({ month: v.string(), count: v.number() })),
+    perYear: v.array(v.object({ year: v.number(), count: v.number() })),
+    /** movies only: release decades from `year` */
+    perDecade: v.array(v.object({ decade: v.number(), count: v.number() })),
+    refreshedAt: v.number(),
+  }).index("by_kind", ["kind"]),
 
   // How many times visitors have clicked each pet in the cabinet. Kept out
   // of the pet documents so frequent taps don't invalidate the pet lists.

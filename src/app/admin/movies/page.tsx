@@ -1,60 +1,68 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../../../convex/_generated/api";
 import { useAdminSession } from "@/components/providers/AdminSessionProvider";
+import { AdminListControls, AdminLoadMore, type AdminStatus } from "@/components/admin/AdminListControls";
+import { BulkImport } from "@/components/admin/BulkImport";
+import { PublishAllButtons } from "@/components/admin/PublishAllButtons";
 import { MovieForm } from "@/components/admin/forms/MovieForm";
 import { formatDate, dateToInputValue } from "@/lib/format";
 import type { Id } from "../../../../convex/_generated/dataModel";
 
+const ADMIN_PAGE = 50;
+
 export default function AdminMoviesPage() {
   const { token } = useAdminSession();
-  const movies = useQuery(
-    api.movies.listAllAdmin,
-    token ? { token } : "skip",
+  const [status, setStatus] = useState<AdminStatus>("all");
+  const [search, setSearch] = useState("");
+  // Paginated: the table can hold thousands of films.
+  const { results: movies, status: listStatus, loadMore } = usePaginatedQuery(
+    api.movies.pageAdmin,
+    token ? { token, status, ...(search ? { search } : {}) } : "skip",
+    { initialNumItems: ADMIN_PAGE },
   );
   const create = useMutation(api.movies.create);
   const update = useMutation(api.movies.update);
   const togglePublish = useMutation(api.movies.togglePublish);
   const remove = useMutation(api.movies.remove);
 
-  const [editingId, setEditingId] = useState<Id<"movies"> | "new" | null>(
-    null,
-  );
+  const [editingId, setEditingId] = useState<Id<"movies"> | "new" | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  if (!token || movies === undefined) return <p>Loading…</p>;
+  // The full record (review, poster) is fetched only for the one being edited.
+  const editing = useQuery(
+    api.movies.getAdmin,
+    token && editingId && editingId !== "new" ? { token, id: editingId } : "skip",
+  );
 
-  const editing =
-    editingId && editingId !== "new"
-      ? movies.find((m) => m._id === editingId)
-      : undefined;
+  if (!token) return <p>Loading…</p>;
 
   if (editingId) {
+    if (editingId !== "new" && editing === undefined) return <p>Loading…</p>;
+    const record = editingId !== "new" ? editing : null;
     return (
       <div>
-        <h1 className="font-heading text-2xl text-ink">
-          {editingId === "new" ? "New Movie" : "Edit Movie"}
-        </h1>
+        <h1 className="font-heading text-2xl text-ink">{editingId === "new" ? "New Movie" : "Edit Movie"}</h1>
         <div className="mt-6">
           <MovieForm
             initial={
-              editing
+              record
                 ? {
-                    title: editing.title,
-                    slug: editing.slug,
-                    year: editing.year?.toString() ?? "",
-                    rating: editing.rating?.toString() ?? "",
-                    review: editing.review ?? "",
-                    posterStorageId: editing.posterStorageId,
-                    watchedAt: dateToInputValue(editing.watchedAt),
-                    published: editing.published,
+                    title: record.title,
+                    slug: record.slug,
+                    year: record.year?.toString() ?? "",
+                    rating: record.rating?.toString() ?? "",
+                    review: record.review ?? "",
+                    posterStorageId: record.posterStorageId,
+                    watchedAt: dateToInputValue(record.watchedAt),
+                    published: record.published,
                   }
                 : undefined
             }
-            existingPosterUrl={editing?.posterUrl}
+            existingPosterUrl={record?.posterUrl}
             submitting={submitting}
             onCancel={() => {
               setFormError(null);
@@ -64,18 +72,11 @@ export default function AdminMoviesPage() {
               setSubmitting(true);
               setFormError(null);
               try {
-                const posterStorageId = values.posterStorageId as
-                  | Id<"_storage">
-                  | undefined;
+                const posterStorageId = values.posterStorageId as Id<"_storage"> | undefined;
                 if (editingId === "new") {
                   await create({ token, ...values, posterStorageId });
                 } else {
-                  await update({
-                    token,
-                    id: editingId,
-                    ...values,
-                    posterStorageId,
-                  });
+                  await update({ token, id: editingId, ...values, posterStorageId });
                 }
                 setEditingId(null);
               } catch (e) {
@@ -85,9 +86,7 @@ export default function AdminMoviesPage() {
               }
             }}
           />
-          {formError && (
-            <p className="mt-3 max-w-md text-sm text-accent">{formError}</p>
-          )}
+          {formError && <p className="mt-3 max-w-md text-sm text-accent">{formError}</p>}
         </div>
       </div>
     );
@@ -107,30 +106,26 @@ export default function AdminMoviesPage() {
           New Movie
         </button>
       </div>
-      <div className="mt-6 flex flex-col gap-2">
+      <div className="mt-4">
+        <PublishAllButtons kind="movies" />
+      </div>
+      <BulkImport kind="movies" />
+      <AdminListControls noun="movies" status={status} onStatus={setStatus} onSearch={setSearch} />
+      <div className="mt-4 flex flex-col gap-2">
+        {listStatus === "LoadingFirstPage" && <p className="text-ink-soft">Loading…</p>}
         {movies.map((m) => (
-          <div
-            key={m._id}
-            className="panel-sm flex items-center justify-between px-4 py-3"
-          >
+          <div key={m._id} className="panel-sm flex items-center justify-between px-4 py-3">
             <div>
               <p className="text-ink">
                 {m.title} {m.year ? `(${m.year})` : ""}
               </p>
               <p className="font-mono text-xs text-ink-soft">
-                {formatDate(m.watchedAt)} ·{" "}
-                {m.published ? "published" : "draft"}
+                {formatDate(m.watchedAt)} · {m.published ? "published" : "draft"}
               </p>
             </div>
             <div className="flex gap-3 text-sm">
               <button
-                onClick={() =>
-                  togglePublish({
-                    token,
-                    id: m._id,
-                    published: !m.published,
-                  })
-                }
+                onClick={() => togglePublish({ token, id: m._id, published: !m.published })}
                 className="text-ink-soft hover:text-ink"
               >
                 {m.published ? "Unpublish" : "Publish"}
@@ -146,9 +141,7 @@ export default function AdminMoviesPage() {
               </button>
               <button
                 onClick={() => {
-                  if (confirm(`Delete "${m.title}"?`)) {
-                    remove({ token, id: m._id });
-                  }
+                  if (confirm(`Delete "${m.title}"?`)) remove({ token, id: m._id });
                 }}
                 className="text-accent"
               >
@@ -157,10 +150,11 @@ export default function AdminMoviesPage() {
             </div>
           </div>
         ))}
-        {movies.length === 0 && (
-          <p className="text-ink-soft">No movies yet.</p>
+        {listStatus !== "LoadingFirstPage" && movies.length === 0 && (
+          <p className="text-ink-soft">{search || status !== "all" ? "Nothing matches." : "No movies yet."}</p>
         )}
       </div>
+      <AdminLoadMore status={listStatus} count={movies.length} onMore={() => loadMore(ADMIN_PAGE)} />
     </div>
   );
 }

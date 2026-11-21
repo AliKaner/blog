@@ -15,7 +15,9 @@ import type * as customPets from "../customPets.js";
 import type * as drawings from "../drawings.js";
 import type * as feed from "../feed.js";
 import type * as files from "../files.js";
+import type * as lib_listOptions from "../lib/listOptions.js";
 import type * as lib_requireAdmin from "../lib/requireAdmin.js";
+import type * as lib_slug from "../lib/slug.js";
 import type * as movies from "../movies.js";
 import type * as petTaps from "../petTaps.js";
 import type * as pets from "../pets.js";
@@ -25,6 +27,7 @@ import type * as profile from "../profile.js";
 import type * as projects from "../projects.js";
 import type * as resumeItems from "../resumeItems.js";
 import type * as softwareLogs from "../softwareLogs.js";
+import type * as stats from "../stats.js";
 import type * as tutorials_articles from "../tutorials/articles.js";
 import type * as tutorials_topics from "../tutorials/topics.js";
 
@@ -42,7 +45,9 @@ declare const fullApi: ApiFromModules<{
   drawings: typeof drawings;
   feed: typeof feed;
   files: typeof files;
+  "lib/listOptions": typeof lib_listOptions;
   "lib/requireAdmin": typeof lib_requireAdmin;
+  "lib/slug": typeof lib_slug;
   movies: typeof movies;
   petTaps: typeof petTaps;
   pets: typeof pets;
@@ -52,6 +57,7 @@ declare const fullApi: ApiFromModules<{
   projects: typeof projects;
   resumeItems: typeof resumeItems;
   softwareLogs: typeof softwareLogs;
+  stats: typeof stats;
   "tutorials/articles": typeof tutorials_articles;
   "tutorials/topics": typeof tutorials_topics;
 }>;
