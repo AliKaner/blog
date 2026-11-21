@@ -1,22 +1,32 @@
 import Link from "next/link";
-import { YearHeatmap } from "@/components/components/library/YearHeatmap";
-import { FEED_TYPE_LABEL, FEED_TYPE_PATH, type FeedItemType } from "@/lib/feedTypes";
+import type { ComponentProps } from "react";
+import { YearHeatmap, type YearHeatmapWeek } from "@/components/components/library/YearHeatmap";
 
-type Item = { type: FeedItemType; title: string; slug: string; date: number };
+/** Links in the grid: a week square keeps the scroll position (the list
+    scrolls itself into view); entry links behave normally. */
+function GridLink(props: ComponentProps<typeof Link> & { href: string }) {
+  return <Link scroll={!props.href.startsWith("/journey?week=")} {...props} />;
+}
 
 /** The Journey's year grid: the copyable YearHeatmap (see /components) in
-    the site's palette and type, each entry linking to its page. */
-export function JourneyHeatmap({ items, now }: { items: Item[]; now: number }) {
+    the site's palette and type, fed from the precomputed weekly rows
+    (convex/journey.ts). Clicking a square opens the list at that week. */
+export function JourneyHeatmap({
+  weeks,
+  now,
+  selectedWeek,
+}: {
+  weeks: { weekStart: number; count: number; groups: YearHeatmapWeek["groups"]; entries: YearHeatmapWeek["entries"] }[];
+  now: number;
+  selectedWeek: number | null;
+}) {
   return (
     <YearHeatmap
       now={now}
-      items={items.map((item) => ({
-        date: item.date,
-        label: item.title,
-        group: FEED_TYPE_LABEL[item.type],
-        href: `${FEED_TYPE_PATH[item.type]}/${item.slug}`,
-      }))}
-      LinkComponent={Link}
+      weeks={weeks.map((w) => ({ start: w.weekStart, count: w.count, groups: w.groups, entries: w.entries }))}
+      weekHref={(start) => `/journey?week=${start}`}
+      selectedWeek={selectedWeek ?? undefined}
+      LinkComponent={GridLink}
       theme={{
         accent: "var(--accent)",
         deep: "var(--accent-2)",

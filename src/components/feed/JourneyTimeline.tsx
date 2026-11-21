@@ -16,9 +16,12 @@ type FeedItem = {
 export function JourneyTimeline({
   items,
   variant = "line",
+  highlight,
 }: {
   items: FeedItem[];
   variant?: "line" | "plain";
+  /** Marks the days it returns true for (e.g. a week picked in the heatmap). */
+  highlight?: (date: number) => boolean;
 }) {
   if (items.length === 0) return null;
 
@@ -38,7 +41,13 @@ export function JourneyTimeline({
   const groupList = (
     <div className="flex flex-col gap-8">
       {groups.map((group) => (
-        <div key={group.key} className={variant === "line" ? "relative pl-6" : ""}>
+        <div
+          key={group.key}
+          className={[
+            variant === "line" ? "relative pl-6" : "",
+            highlight?.(group.date) ? "border-l-[3px] border-double border-accent pl-4" : "",
+          ].join(" ")}
+        >
           {variant === "line" && (
             <div
               className="absolute left-0 top-1.5 h-[11px] w-[11px] rounded-full border-2"

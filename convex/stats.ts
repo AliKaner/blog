@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import type { MutationCtx } from "./_generated/server";
 import { requireAdmin } from "./lib/requireAdmin";
 
@@ -95,6 +96,8 @@ async function rebuild(ctx: MutationCtx, k: Kind) {
   const doc = { kind: k, ...summary, refreshedAt: now };
   if (existing) await ctx.db.replace("collectionStats", existing._id, doc);
   else await ctx.db.insert("collectionStats", doc);
+  // The Journey heatmap draws from the same rows; refresh it alongside.
+  await ctx.scheduler.runAfter(0, internal.journey.recompute, {});
   return { total: summary.total, refreshedAt: now };
 }
 

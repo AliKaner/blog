@@ -238,6 +238,19 @@ export default defineSchema({
     refreshedAt: v.number(),
   }).index("by_kind", ["kind"]),
 
+  // The Journey heatmap, one row per week that has anything in it, so the
+  // page reads a few hundred small rows instead of every published entry.
+  // Rebuilt from the admin (and after stats refreshes), not on every write.
+  // `entries` holds only the first few, for the week's hover card.
+  journeyWeeks: defineTable({
+    /** Sunday 00:00 UTC of the week */
+    weekStart: v.number(),
+    count: v.number(),
+    groups: v.array(v.object({ group: v.string(), count: v.number() })),
+    entries: v.array(v.object({ label: v.string(), href: v.string(), group: v.string() })),
+    refreshedAt: v.number(),
+  }).index("by_weekStart", ["weekStart"]),
+
   // How many times visitors have clicked each pet in the cabinet. Kept out
   // of the pet documents so frequent taps don't invalidate the pet lists.
   petTaps: defineTable({

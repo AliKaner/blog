@@ -59,6 +59,49 @@ function StatsRow({ kind, label }: { kind: Kind; label: string }) {
   );
 }
 
+/** The Journey heatmap's weekly rows (every collection). They also
+    rebuild after a Movies/Books refresh; this is for changes elsewhere
+    (posts, places, cocktails, dev logs). */
+function JourneyRow() {
+  const { token } = useAdminSession();
+  const status = useQuery(api.journey.status, {});
+  const refresh = useMutation(api.journey.refresh);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const onRefresh = async () => {
+    if (!token) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await refresh({ token });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Refresh failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 py-3">
+      <div>
+        <p className="font-heading text-base text-ink">Journey heatmap</p>
+        <p className="font-mono text-xs text-ink-soft">
+          {status === undefined
+            ? "…"
+            : status === null
+              ? "Never built — the Journey page shows no heatmap yet."
+              : `${status.total.toLocaleString("en")} entries in ${status.weeks} weeks · refreshed ${WHEN.format(status.refreshedAt)}`}
+        </p>
+        {error && <p className="font-mono text-xs text-accent-2">{error}</p>}
+      </div>
+      <button type="button" onClick={onRefresh} disabled={busy || !token} className="btn px-4 py-2 text-xs disabled:opacity-60">
+        {busy ? "Refreshing…" : "Refresh heatmap"}
+      </button>
+    </div>
+  );
+}
+
 export function StatsRefreshPanel() {
   return (
     <section className="panel px-5 py-3">
@@ -66,6 +109,7 @@ export function StatsRefreshPanel() {
       <div className="divide-y divide-border">
         <StatsRow kind="movies" label="Movies" />
         <StatsRow kind="books" label="Books" />
+        <JourneyRow />
       </div>
     </section>
   );

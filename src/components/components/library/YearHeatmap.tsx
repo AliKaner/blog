@@ -67,8 +67,23 @@ export type YearHeatmapLinkComponent = ComponentType<
   AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children?: ReactNode }
 >;
 
+/** A pre-counted week, for when the entries live elsewhere (e.g. a
+    summary table) and only a few are kept for the card. */
+export type YearHeatmapWeek = {
+  /** Any moment in the week (its start is fine). Passed back to
+      `weekHref` and compared with `selectedWeek` as given. */
+  start: number;
+  count: number;
+  groups?: { group: string; count: number }[];
+  /** The entries the card lists (newest first). */
+  entries?: { label: string; href?: string; group?: string }[];
+};
+
 export type YearHeatmapProps = {
-  items: YearHeatmapItem[];
+  /** Every entry — the component buckets them itself… */
+  items?: YearHeatmapItem[];
+  /** …or weeks already counted (use one or the other). */
+  weeks?: YearHeatmapWeek[];
   /** Last day shown (ms), e.g. Date.now() taken outside render — passed
       in so server and client draw the same grid. */
   now: number;
@@ -81,13 +96,26 @@ export type YearHeatmapProps = {
   maxListed?: number;
   /** Square size in px. Default 9. */
   cell?: number;
+  /** Makes each active square a link (e.g. to that week in a list). */
+  weekHref?: (start: number) => string;
+  /** The week to mark as chosen (a `start` as passed in / handed out). */
+  selectedWeek?: number;
   theme?: YearHeatmapTheme;
   LinkComponent?: YearHeatmapLinkComponent;
   className?: string;
   style?: CSSProperties;
 };
 
-type Week = { start: number; items: YearHeatmapItem[] };
+type Entry = { label: string; href?: string; group?: string };
+type Week = {
+  /** Local start of the week (grid position). */
+  start: number;
+  /** The caller's own key for it. */
+  source: number;
+  count: number;
+  groups: [string, number][];
+  entries: Entry[];
+};
 
 const DAY = 86_400_000;
 const WEEK = 7 * DAY;
@@ -145,27 +173,65 @@ function themeVars(t: YearHeatmapTheme | undefined, cell: number): CSSProperties
   return vars as CSSProperties;
 }
 
+/** Either input, as active weeks keyed by their local start. */
+function collect(items: YearHeatmapItem[] | undefined, weeks: YearHeatmapWeek[] | undefined, maxListed: number) {
+  const out = new Map<number, Week>();
+  if (weeks) {
+    for (const w of weeks) {
+      // Key on the middle of the week so a UTC start still lands right.
+      const start = startOfWeek(w.start + 3 * DAY);
+      out.set(start, {
+        start,
+        source: w.start,
+        count: w.count,
+        groups: (w.groups ?? []).map((g) => [g.group, g.count] as [string, number]),
+        entries: (w.entries ?? []).slice(0, maxListed),
+      });
+    }
+    return out;
+  }
+  const buckets = new Map<number, YearHeatmapItem[]>();
+  for (const item of items ?? []) {
+    const key = startOfWeek(item.date);
+    const bucket = buckets.get(key);
+    if (bucket) bucket.push(item);
+    else buckets.set(key, [item]);
+  }
+  for (const [start, list] of buckets) {
+    list.sort((a, b) => b.date - a.date);
+    const groups = new Map<string, number>();
+    for (const item of list) if (item.group) groups.set(item.group, (groups.get(item.group) ?? 0) + 1);
+    out.set(start, {
+      start,
+      source: start,
+      count: list.length,
+      groups: [...groups.entries()].sort((a, b) => b[1] - a[1]),
+      entries: list.slice(0, maxListed).map(({ label, href, group }) => ({ label, href, group })),
+    });
+  }
+  return out;
+}
+
 export function YearHeatmap({
   items,
+  weeks: weeksIn,
   now,
   noun = ["thing", "things"],
   sparseShare = 0.05,
   maxListed = 6,
   cell = 9,
+  weekHref,
+  selectedWeek,
   theme,
   LinkComponent,
   className,
   style,
 }: YearHeatmapProps) {
-  const byWeek = new Map<number, YearHeatmapItem[]>();
+  const active = collect(items, weeksIn, maxListed);
   const perYear = new Map<number, number>();
-  for (const item of items) {
-    const key = startOfWeek(item.date);
-    const bucket = byWeek.get(key);
-    if (bucket) bucket.push(item);
-    else byWeek.set(key, [item]);
-    const y = weekYear(key);
-    perYear.set(y, (perYear.get(y) ?? 0) + 1);
+  for (const w of active.values()) {
+    const y = weekYear(w.start);
+    perYear.set(y, (perYear.get(y) ?? 0) + w.count);
   }
 
   // The first year worth a row: the earliest that isn't a stray.
@@ -178,7 +244,7 @@ export function YearHeatmap({
 
   const years = new Map<number, Week[]>();
   for (let t = startOfWeek(new Date(startYear, 0, 4).getTime()); t <= startOfWeek(now); t += WEEK) {
-    const week = { start: t, items: byWeek.get(t) ?? [] };
+    const week = active.get(t) ?? { start: t, source: t, count: 0, groups: [], entries: [] };
     const y = weekYear(t);
     const row = years.get(y);
     if (row) row.push(week);
@@ -186,9 +252,10 @@ export function YearHeatmap({
   }
   const rows = [...years.entries()].sort((a, b) => b[0] - a[0]);
   const all = rows.flatMap(([, w]) => w);
-  const total = all.reduce((n, w) => n + w.items.length, 0);
-  const bounds = thresholds(all.map((w) => w.items.length));
+  const total = all.reduce((n, w) => n + w.count, 0);
+  const bounds = thresholds(all.map((w) => w.count));
   const columns = Math.max(53, ...rows.map(([, w]) => w.length));
+  const yearTotal = (weeks: Week[]) => weeks.reduce((n, w) => n + w.count, 0);
 
   const months = MONTHS.map((label, m) => {
     const day = (new Date(startYear, m, 1).getTime() - new Date(startYear, 0, 1).getTime()) / DAY;
@@ -246,14 +313,15 @@ export function YearHeatmap({
                   <WeekCell
                     key={week.start}
                     week={week}
-                    level={levelOf(week.items.length, bounds)}
+                    level={levelOf(week.count, bounds)}
                     align={i < 10 ? "start" : i > weeks.length - 11 && i > 20 ? "end" : "center"}
-                    maxListed={maxListed}
+                    href={weekHref && week.count > 0 ? weekHref(week.source) : undefined}
+                    selected={selectedWeek !== undefined && week.count > 0 && week.source === selectedWeek}
                     LinkComponent={LinkComponent}
                   />
                 ))}
               </div>
-              <span className="yh-total">{weeks.reduce((n, w) => n + w.items.length, 0).toLocaleString("en")}</span>
+              <span className="yh-total">{yearTotal(weeks).toLocaleString("en")}</span>
             </div>
           ))}
         </div>
@@ -272,8 +340,8 @@ export function YearHeatmap({
           {rows.map(([year, weeks]) => (
             <tr key={year}>
               <th scope="row">{year}</th>
-              <td>{weeks.reduce((n, w) => n + w.items.length, 0)}</td>
-              <td>{weeks.filter((w) => w.items.length > 0).length}</td>
+              <td>{yearTotal(weeks)}</td>
+              <td>{weeks.filter((w) => w.count > 0).length}</td>
             </tr>
           ))}
         </tbody>
@@ -286,27 +354,38 @@ function WeekCell({
   week,
   level,
   align,
-  maxListed,
+  href,
+  selected,
   LinkComponent,
 }: {
   week: Week;
   level: number;
   align: "start" | "center" | "end";
-  maxListed: number;
+  href?: string;
+  selected: boolean;
   LinkComponent?: YearHeatmapLinkComponent;
 }) {
-  const count = week.items.length;
+  const { count } = week;
   if (count === 0) return <span className="yh-sq" data-level={0} />;
 
   const end = week.start + WEEK - DAY;
-  const groups = new Map<string, number>();
-  for (const item of week.items) if (item.group) groups.set(item.group, (groups.get(item.group) ?? 0) + 1);
-  const breakdown = [...groups.entries()].sort((a, b) => b[1] - a[1]);
   const Anchor = LinkComponent ?? "a";
+  const label = `${count} in the week of ${DATE_Y.format(week.start)}`;
 
   return (
-    <span className="yh-cell" tabIndex={0} aria-label={`${count} in the week of ${DATE_Y.format(week.start)}`}>
-      <span className="yh-sq" data-level={level} />
+    <span
+      className="yh-cell"
+      data-selected={selected}
+      tabIndex={href ? undefined : 0}
+      aria-label={href ? undefined : label}
+    >
+      {href ? (
+        <Anchor href={href} className="yh-sq-link" aria-label={label} aria-current={selected ? "true" : undefined}>
+          <span className="yh-sq" data-level={level} />
+        </Anchor>
+      ) : (
+        <span className="yh-sq" data-level={level} />
+      )}
       <span className="yh-pop" data-align={align}>
         <span className="yh-card">
           <span className="yh-card-head">
@@ -321,9 +400,9 @@ function WeekCell({
             <span className="yh-count">{count}</span>
           </span>
 
-          {breakdown.length > 0 && (
+          {week.groups.length > 0 && (
             <span className="yh-breakdown">
-              {breakdown.map(([g, n], i) => (
+              {week.groups.map(([g, n], i) => (
                 <span key={g}>
                   {i > 0 && <span className="yh-dot"> · </span>}
                   {g} <b>{n}</b>
@@ -333,7 +412,7 @@ function WeekCell({
           )}
 
           <span className="yh-list">
-            {week.items.slice(0, maxListed).map((item, i) => (
+            {week.entries.map((item, i) => (
               <span key={i} className="yh-entry">
                 {item.group && <span className="yh-tag">{item.group}</span>}
                 {item.href ? (
@@ -345,8 +424,11 @@ function WeekCell({
                 )}
               </span>
             ))}
-            {count > maxListed && <span className="yh-more">and {count - maxListed} more</span>}
+            {count > week.entries.length && (
+              <span className="yh-more">and {count - week.entries.length} more</span>
+            )}
           </span>
+          {href && <span className="yh-hint">Click the square to open this week</span>}
         </span>
       </span>
     </span>
@@ -395,8 +477,12 @@ const CSS = `
 .yh-sq[data-level="5"] { background: var(--yh-deep); }
 
 .yh-cell { position: relative; display: block; outline: none; }
+.yh-sq-link { display: block; outline: none; cursor: pointer; }
+.yh-cell[data-selected="true"] .yh-sq {
+  box-shadow: 0 0 0 1.5px var(--yh-surface), 0 0 0 3px var(--yh-accent);
+}
 .yh-cell:hover, .yh-cell:focus-within { z-index: 20; }
-.yh-cell:hover > .yh-sq, .yh-cell:focus-visible > .yh-sq {
+.yh-cell:hover .yh-sq, .yh-cell:focus-visible > .yh-sq, .yh-sq-link:focus-visible > .yh-sq {
   transform: scale(1.35);
   box-shadow: 0 0 0 1.5px var(--yh-surface), 0 0 0 2.5px var(--yh-accent);
 }
@@ -493,6 +579,7 @@ const CSS = `
   text-decoration: none;
 }
 a.yh-title:hover, a.yh-title:focus-visible { color: var(--yh-accent); text-decoration: underline; text-underline-offset: 2px; }
+.yh-hint { display: block; margin-top: 0.45rem; padding-top: 0.35rem; border-top: 1px solid color-mix(in srgb, var(--yh-accent) 18%, transparent); font-family: var(--yh-italic); font-style: italic; font-size: 0.72rem; color: var(--yh-muted); }
 .yh-more { margin-top: 0.15rem; font-family: var(--yh-italic); font-style: italic; font-size: 0.8rem; color: var(--yh-muted); }
 
 .yh-sr {
