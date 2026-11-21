@@ -2,14 +2,23 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { OrbRating } from "@/components/components/library/OrbRating";
+import { OrbSearch } from "@/components/components/library/OrbSearch";
 import { SORTS, toSearchString, type ListParams } from "@/lib/listParams";
 
-const RATINGS = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+// The site palette, handed to the orbs' own theme variables.
+const ORB_THEME = {
+  accent: "var(--accent)",
+  ink: "var(--ink)",
+  muted: "var(--ink-soft)",
+  surface: "var(--card)",
+};
 
 /**
- * Sort, rating band and title search for the Movies / Books lists. All
- * state lives in the URL, so a filtered view is shareable and its first
- * page renders on the server; the paginated query does the rest.
+ * Sort, rating and title search for the Movies / Books walls. All state
+ * lives in the URL, so a filtered view is shareable and its first page
+ * renders on the server; the paginated query does the rest. Rating and
+ * search are the same copyable orbs shown on /components.
  */
 export function ListFilters({ params, noun }: { params: ListParams; noun: string }) {
   const router = useRouter();
@@ -29,12 +38,9 @@ export function ListFilters({ params, noun }: { params: ListParams; noun: string
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
-  const filtered = params.sort !== "newest" || params.rating !== undefined || Boolean(params.search);
-
   return (
     <div className={`flex flex-col gap-4 transition-opacity ${pending ? "opacity-60" : ""}`}>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-2">
-        <Label>Order</Label>
         {SORTS.map((s, i) => (
           <span key={s.value} className="flex items-baseline">
             {i > 0 && (
@@ -58,82 +64,24 @@ export function ListFilters({ params, noun }: { params: ListParams; noun: string
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <Label>Rating</Label>
-        <div className="flex flex-wrap gap-1" role="group" aria-label="Filter by rating">
-          <Chip active={params.rating === undefined} onClick={() => go({ ...params, rating: undefined })}>
-            All
-          </Chip>
-          {RATINGS.map((r) => (
-            <Chip
-              key={r}
-              active={params.rating === r}
-              onClick={() => go({ ...params, rating: params.rating === r ? undefined : r })}
-              label={`Only ${noun} rated ${r}`}
-            >
-              {r}
-            </Chip>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <Label>Search</Label>
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={`Search ${noun} by title`}
-          aria-label={`Search ${noun} by title`}
-          className="input max-w-xs py-1.5 text-sm"
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+        <OrbRating
+          value={params.rating ?? null}
+          onChange={(rating) => go({ ...params, rating: rating ?? undefined })}
+          label={`Filter ${noun} by rating`}
+          theme={ORB_THEME}
+          className="font-heading"
         />
-        {filtered && (
-          <button
-            type="button"
-            onClick={() => {
-              setSearch("");
-              go({ sort: "newest" });
-            }}
-            className="font-mono text-xs text-accent underline-offset-2 hover:underline"
-          >
-            Clear
-          </button>
-        )}
+        <OrbSearch
+          value={search}
+          onChange={setSearch}
+          label={`Search ${noun} by title`}
+          placeholder={`Search ${noun}…`}
+          defaultOpen={Boolean(params.search)}
+          theme={ORB_THEME}
+          className="font-accent"
+        />
       </div>
     </div>
-  );
-}
-
-function Label({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="w-16 shrink-0 font-heading text-[10px] uppercase tracking-[0.18em] text-ink-soft">{children}</span>
-  );
-}
-
-function Chip({
-  active,
-  onClick,
-  label,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      aria-label={label}
-      className={`min-w-8 border px-2 py-0.5 font-heading text-xs transition-colors ${
-        active
-          ? "border-accent bg-accent text-paper"
-          : "border-border text-ink-soft hover:border-accent hover:text-accent"
-      }`}
-    >
-      {children}
-    </button>
   );
 }
