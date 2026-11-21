@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import {
+  Cinzel,
+  Cormorant_Garamond,
   IBM_Plex_Mono,
-  Lumanosimo,
-  Manufacturing_Consent,
-  Nova_Cut,
   Source_Serif_4,
 } from "next/font/google";
 import "./globals.css";
@@ -12,16 +11,26 @@ import { AdminSessionProvider } from "@/components/providers/AdminSessionProvide
 import { KonamiListener } from "@/components/admin/KonamiListener";
 import { AdminLoginModal } from "@/components/admin/AdminLoginModal";
 import { GrainOverlay } from "@/components/texture/GrainOverlay";
-import { ParticleOverlay } from "@/components/texture/ParticleOverlay";
+import { CornerDecor } from "@/components/texture/CornerDecor";
 import { SiteNav } from "@/components/nav/SiteNav";
-import { PetStrip } from "@/components/pets/PetStrip";
 import { FaviconCycler } from "@/components/FaviconCycler";
 
-const novaCut = Nova_Cut({
-  variable: "--font-nova-cut",
+// Type to match the Piranesi plates in the decor:
+// headings in Roman inscription capitals (like the plate titles),
+const cinzel = Cinzel({
+  variable: "--font-cinzel",
   subsets: ["latin"],
-  weight: "400",
 });
+
+// subtitles/accents in a Garamond italic (like the plate dedications),
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  style: ["italic"],
+});
+
+// and body text in a sturdy screen serif for comfortable reading.
 
 const sourceSerif = Source_Serif_4({
   variable: "--font-source-serif",
@@ -32,18 +41,6 @@ const plexMono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
   subsets: ["latin"],
   weight: ["400", "500"],
-});
-
-const manufacturingConsent = Manufacturing_Consent({
-  variable: "--font-manufacturing-consent",
-  subsets: ["latin"],
-  weight: "400",
-});
-
-const lumanosimo = Lumanosimo({
-  variable: "--font-lumanosimo",
-  subsets: ["latin"],
-  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -59,21 +56,20 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${novaCut.variable} ${sourceSerif.variable} ${plexMono.variable} ${manufacturingConsent.variable} ${lumanosimo.variable} h-full antialiased`}
+      className={`${cinzel.variable} ${cormorant.variable} ${sourceSerif.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col pr-20 md:pl-20 md:pr-0">
         <ConvexClientProvider>
           <AdminSessionProvider>
             <SiteNav />
-            <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10 pb-24">
+            <main className="relative z-10 mx-auto w-full max-w-3xl flex-1 px-6 py-10 pb-24">
               {children}
             </main>
             <KonamiListener />
             <AdminLoginModal />
-            <PetStrip />
           </AdminSessionProvider>
         </ConvexClientProvider>
-        <ParticleOverlay />
+        <CornerDecor />
         <GrainOverlay />
         <FaviconCycler />
       </body>

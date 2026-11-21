@@ -1,23 +1,24 @@
 @import "tailwindcss";
 
-@keyframes particle-drift {
+@keyframes decor-fade-in {
   from {
-    background-position: 0 0;
+    opacity: 0;
   }
 
   to {
-    background-position: 300px 300px;
+    opacity: 1;
   }
 }
 
 :root {
-  --paper: #0b0910;
-  --ink: #f5f3fa;
-  --ink-soft: #9c93b8;
-  --card: #161320;
-  --border: #221536;
-  --accent: #7a14d9;
-  --accent-2: #6e00e0;
+  --paper: #d3e1f1;
+  --ink: #314863;
+  /* 82% keeps secondary text at ~4.6:1 on --paper (WCAG AA for body text). */
+  --ink-soft: color-mix(in srgb, var(--ink) 82%, var(--paper));
+  --card: #d3e1f1;
+  --border: #7a9ec5;
+  --accent: #6f3034;
+  --accent-2: #450e14;
 }
 
 @theme inline {
@@ -28,11 +29,10 @@
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
-  --font-heading: var(--font-nova-cut);
+  --font-heading: var(--font-cinzel);
+  --font-accent: var(--font-cormorant);
   --font-body: var(--font-source-serif);
   --font-mono: var(--font-plex-mono);
-  --font-label: var(--font-manufacturing-consent);
-  --font-brand: var(--font-lumanosimo);
 }
 
 body {
@@ -46,7 +46,9 @@ h2,
 h3,
 h4 {
   font-family: var(--font-heading);
-  letter-spacing: -0.01em;
+  /* Inscription capitals want a little air between letters. */
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 a {
@@ -125,10 +127,10 @@ a {
 }
 
 /* Syntax highlighting (rehype-highlight / highlight.js), tuned to the
-   dark purple theme instead of a stock hljs stylesheet. */
+   site's light theme instead of a stock hljs stylesheet. */
 .prose-blog .hljs-comment,
 .prose-blog .hljs-quote {
-  color: #6c6488;
+  color: #5c6b7d;
   font-style: italic;
 }
 
@@ -136,20 +138,20 @@ a {
 .prose-blog .hljs-selector-tag,
 .prose-blog .hljs-doctag,
 .prose-blog .hljs-meta {
-  color: #c792ea;
+  color: #a4303a;
 }
 
 .prose-blog .hljs-string,
 .prose-blog .hljs-regexp,
 .prose-blog .hljs-addition {
-  color: #a8d68a;
+  color: #1f7a4d;
 }
 
 .prose-blog .hljs-number,
 .prose-blog .hljs-literal,
 .prose-blog .hljs-symbol,
 .prose-blog .hljs-bullet {
-  color: #f0a86a;
+  color: #b5631a;
 }
 
 .prose-blog .hljs-title,
@@ -157,7 +159,7 @@ a {
 .prose-blog .hljs-title.class_,
 .prose-blog .hljs-section,
 .prose-blog .hljs-name {
-  color: #8fb8ff;
+  color: #314863;
 }
 
 .prose-blog .hljs-attr,
@@ -168,16 +170,16 @@ a {
 .prose-blog .hljs-selector-class,
 .prose-blog .hljs-selector-id,
 .prose-blog .hljs-params {
-  color: #e0b7ff;
+  color: #3f6ea1;
 }
 
 .prose-blog .hljs-built_in,
 .prose-blog .hljs-type {
-  color: #7fd6d0;
+  color: #0b7285;
 }
 
 .prose-blog .hljs-deletion {
-  color: #f28fa5;
+  color: #a4303a;
 }
 
 .prose-blog .hljs-emphasis {
@@ -188,38 +190,34 @@ a {
   font-weight: 600;
 }
 
-/* Angular "panel" surface: cut corners instead of rounded ones, plus a hard
-   offset shadow so the block reads as physically popped off the page. */
+/* Soft "panel" surface: rounded corners and a gentle, neutral lift —
+   calm rather than the hard-edged, neon-offset look of a HUD card. */
 .panel {
   position: relative;
   background: var(--card);
   border: 1px solid var(--border);
-  clip-path: polygon(14px 0%,
-      100% 0%,
-      100% calc(100% - 14px),
-      calc(100% - 14px) 100%,
-      0% 100%,
-      0% 14px);
-  box-shadow: 6px 6px 0 0 var(--accent);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  border-radius: 16px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 14px 30px -16px rgba(0, 0, 0, 0.55);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .panel:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 8px 8px 0 0 var(--accent);
+  transform: translateY(-3px);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.22),
+    0 20px 36px -16px rgba(0, 0, 0, 0.6);
 }
 
 .panel-sm {
   position: relative;
   background: var(--card);
   border: 1px solid var(--border);
-  clip-path: polygon(8px 0%,
-      100% 0%,
-      100% calc(100% - 8px),
-      calc(100% - 8px) 100%,
-      0% 100%,
-      0% 8px);
-  box-shadow: 3px 3px 0 0 var(--accent-2);
+  border-radius: 12px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.18),
+    0 8px 18px -10px rgba(0, 0, 0, 0.5);
 }
 
 .btn {
@@ -227,60 +225,507 @@ a {
   background: var(--accent);
   color: var(--paper);
   border: 1px solid var(--accent);
-  clip-path: polygon(8px 0%,
-      100% 0%,
-      100% calc(100% - 8px),
-      calc(100% - 8px) 100%,
-      0% 100%,
-      0% 8px);
-  box-shadow: 4px 4px 0 0 var(--accent-2);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.5);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease;
 }
 
 .btn:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 5px 5px 0 0 var(--accent-2);
+  transform: translateY(-1px);
+  opacity: 0.92;
 }
 
 .btn:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 0 var(--accent-2);
+  transform: translateY(0);
+  box-shadow: 0 2px 8px -4px rgba(0, 0, 0, 0.5);
 }
 
 /* Cocktail "ticket" surface: a slightly tilted bar-tab card with a torn
-   dashed top edge, distinct from the panel/panel-sm cut-corner language
-   used everywhere else. Straightens and lifts on hover. */
+   dashed top edge. Straightens and lifts gently on hover. */
 .ticket {
   position: relative;
   background: var(--card);
   border: 1px solid var(--border);
   border-top: 2px dashed var(--border);
+  border-radius: 12px;
   transform: rotate(var(--tilt, 0deg));
-  box-shadow: 4px 4px 0 0 var(--accent-2);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.55);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .ticket:hover {
   transform: rotate(0deg) translateY(-3px);
-  box-shadow: 6px 6px 0 0 var(--accent-2);
+  box-shadow: 0 16px 28px -12px rgba(0, 0, 0, 0.6);
 }
 
 .input {
   width: 100%;
   border: 1px solid var(--border);
+  border-radius: 10px;
   background: var(--paper);
   color: var(--ink);
   padding: 0.5rem 0.75rem;
   outline: none;
-  clip-path: polygon(6px 0%,
-      100% 0%,
-      100% calc(100% - 6px),
-      calc(100% - 6px) 100%,
-      0% 100%,
-      0% 6px);
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 
 .input:focus {
   border-color: var(--accent);
-  box-shadow: 3px 3px 0 0 var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* Floating icon rail: liquid-glass — translucent and blurred so whatever
+   sits behind it (the branch art, page content) shows through softly.
+   The rail and its hover bulge share one --glass fill so they read as a
+   single piece of material when the bulge morphs out of the rail. */
+.nav-shell {
+  /* Lifted toward white: --card equals --paper, so plain card glass would
+     vanish into the page. */
+  --glass: color-mix(in srgb, color-mix(in srgb, #fff 55%, var(--card)) 86%, transparent);
+  --glass-blur: blur(18px) saturate(160%);
+  --fillet: 14px;
+  --morph: cubic-bezier(0.34, 1.35, 0.64, 1);
+}
+
+.nav-rail {
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 10px 20px -8px rgba(0, 0, 0, 0.3),
+    0 28px 48px -20px rgba(0, 0, 0, 0.4);
+  scrollbar-width: none;
+}
+
+.nav-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-icon {
+  position: relative;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: linear-gradient(145deg,
+      color-mix(in srgb, var(--card) 65%, transparent),
+      color-mix(in srgb, var(--card) 40%, transparent));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.15);
+  transition:
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.3s ease;
+}
+
+.nav-icon[data-hovered="true"] {
+  color: var(--accent);
+  background: linear-gradient(145deg,
+      color-mix(in srgb, var(--accent) 22%, transparent),
+      color-mix(in srgb, var(--card) 55%, transparent));
+}
+
+/* The page you're on: filled with the accent so it reads at a glance,
+   even while the rail is collapsed to icons only. */
+.nav-icon[aria-current="page"] {
+  color: var(--paper);
+  background: linear-gradient(145deg, var(--accent), var(--accent-2));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 4px 10px -4px color-mix(in srgb, var(--accent-2) 70%, transparent);
+}
+
+.nav-icon:active {
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.18),
+    0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Hover morph — two nested layers (see SiteNav):
+   OUTER .nav-bulge: a glass tongue growing out of the rail's edge, joined to
+   it by two concave .nav-fillet pieces; .nav-corner squares off the rail's
+   rounded end when the first/last row is hovered.
+   INNER .nav-pill: the hovered icon button stretched out with its label.
+   Everything slides between rows and springs open/closed. */
+.nav-bulge,
+.nav-corner,
+.nav-fillet {
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+.nav-bulge {
+  position: absolute;
+  width: var(--bulge-w, 0px);
+  border-radius: 0 9999px 9999px 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    10px 12px 22px -14px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  transform-origin: left center;
+  transition:
+    top 0.4s var(--morph),
+    width 0.45s var(--morph),
+    opacity 0.2s ease,
+    transform 0.4s var(--morph);
+}
+
+.nav-fillet {
+  position: absolute;
+  left: 0;
+  width: var(--fillet);
+  height: var(--fillet);
+  transition: opacity 0.2s ease;
+}
+
+.nav-fillet-top {
+  bottom: 100%;
+  mask: radial-gradient(circle at 100% 0, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+  -webkit-mask: radial-gradient(circle at 100% 0, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+}
+
+.nav-fillet-bottom {
+  top: 100%;
+  mask: radial-gradient(circle at 100% 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+  -webkit-mask: radial-gradient(circle at 100% 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+}
+
+/* No fillet past the rail's ends — the corner piece takes over there. */
+.nav-bulge[data-first="true"] .nav-fillet-top,
+.nav-bulge[data-last="true"] .nav-fillet-bottom {
+  opacity: 0;
+}
+
+/* Only the area OUTSIDE the rail's rounded corner (the rail already fills
+   the quarter circle), so the glass isn't doubled. */
+.nav-corner {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease, top 0.4s var(--morph);
+}
+
+.nav-corner[data-at="top"] {
+  mask: radial-gradient(circle at 0 100%, transparent 27.5px, #000 28px);
+  -webkit-mask: radial-gradient(circle at 0 100%, transparent 27.5px, #000 28px);
+}
+
+.nav-corner[data-at="bottom"] {
+  mask: radial-gradient(circle at 0 0, transparent 27.5px, #000 28px);
+  -webkit-mask: radial-gradient(circle at 0 0, transparent 27.5px, #000 28px);
+}
+
+.nav-shell[data-side="left"] .nav-corner[data-at="top"] {
+  mask: radial-gradient(circle at 100% 100%, transparent 27.5px, #000 28px);
+  -webkit-mask: radial-gradient(circle at 100% 100%, transparent 27.5px, #000 28px);
+}
+
+.nav-shell[data-side="left"] .nav-corner[data-at="bottom"] {
+  mask: radial-gradient(circle at 100% 0, transparent 27.5px, #000 28px);
+  -webkit-mask: radial-gradient(circle at 100% 0, transparent 27.5px, #000 28px);
+}
+
+.nav-shell[data-open="true"] .nav-corner[data-show="true"] {
+  opacity: 1;
+}
+
+.nav-pill {
+  position: absolute;
+  width: var(--pill-w);
+  overflow: hidden;
+  border-radius: 9999px;
+  color: var(--accent);
+  background: linear-gradient(145deg,
+      color-mix(in srgb, var(--accent) 16%, var(--glass)),
+      color-mix(in srgb, #fff 40%, var(--glass)));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.08),
+    0 2px 6px -2px rgba(0, 0, 0, 0.25);
+  transition:
+    top 0.4s var(--morph),
+    width 0.45s var(--morph),
+    opacity 0.18s ease;
+}
+
+.nav-pill[data-active="true"] {
+  color: var(--paper);
+  background: linear-gradient(145deg, var(--accent), var(--accent-2));
+}
+
+.nav-pill-label {
+  transition: opacity 0.2s ease 0.1s;
+}
+
+/* Closed: bulge folds into the rail, pill shrinks back onto its row. */
+.nav-shell[data-open="false"] .nav-bulge {
+  opacity: 0;
+  transform: scaleX(0.2);
+}
+
+.nav-shell[data-open="false"] .nav-pill {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nav-shell[data-open="false"] .nav-pill-label {
+  opacity: 0;
+  transition-delay: 0s;
+}
+
+/* Appearing from nothing: snap to the row instead of sliding in. */
+.nav-shell[data-snap="true"] .nav-bulge,
+.nav-shell[data-snap="true"] .nav-pill,
+.nav-shell[data-snap="true"] .nav-corner {
+  transition-property: width, opacity, transform;
+}
+
+/* Mobile: the rail sits bottom-right, so everything mirrors leftward. */
+.nav-shell[data-side="left"] .nav-bulge {
+  border-radius: 9999px 0 0 9999px;
+  transform-origin: right center;
+}
+
+.nav-shell[data-side="left"] .nav-fillet {
+  left: auto;
+  right: 0;
+}
+
+.nav-shell[data-side="left"] .nav-fillet-top {
+  mask: radial-gradient(circle at 0 0, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+  -webkit-mask: radial-gradient(circle at 0 0, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+}
+
+.nav-shell[data-side="left"] .nav-fillet-bottom {
+  mask: radial-gradient(circle at 0 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+  -webkit-mask: radial-gradient(circle at 0 100%, transparent calc(var(--fillet) - 0.5px), #000 var(--fillet));
+}
+
+/* Engraved ornament bands (public/decor/ornaments, cut from Piranesi plates
+   by scripts/cut-ornament.mjs). The files are line-art masks, so the band
+   is painted in whatever colour sits underneath — here the accent.
+   .ornament + a variant can be dropped anywhere; every page heading gets
+   the rosette scroll beneath it automatically. */
+.ornament {
+  display: block;
+  background-color: var(--accent);
+  mask: var(--ornament-src) center / contain no-repeat;
+  -webkit-mask: var(--ornament-src) center / contain no-repeat;
+  aspect-ratio: var(--ornament-ratio);
+  opacity: 0.85;
+}
+
+.ornament-rosette {
+  --ornament-src: url("/decor/ornaments/rosette.webp");
+  --ornament-ratio: 464 / 68;
+}
+
+.ornament-palmette {
+  --ornament-src: url("/decor/ornaments/palmette.webp");
+  --ornament-ratio: 362 / 76;
+}
+
+.ornament-acanthus {
+  --ornament-src: url("/decor/ornaments/acanthus.webp");
+  --ornament-ratio: 384 / 106;
+}
+
+main h1::after {
+  content: "";
+  display: block;
+  width: min(100%, 220px);
+  aspect-ratio: 464 / 68;
+  margin-top: 0.6rem;
+  background-color: var(--accent);
+  mask: url("/decor/ornaments/rosette.webp") left center / contain no-repeat;
+  -webkit-mask: url("/decor/ornaments/rosette.webp") left center / contain no-repeat;
+  opacity: 0.8;
+}
+
+/* Print frame for images: square corners, a cream mat like the paper of
+   the engravings in the decor, a hairline keyline hugging the picture, and
+   a double outer rule in the accent — a plate hung in a print room.
+   Works directly on <img> (the mat is the img's padding; the keyline is an
+   inset outline at the content edge), so object-cover/contain still apply.
+   Sizes: .frame (default), .frame-lg (lightbox/hero), .frame-sm (thumbs). */
+.frame {
+  --mat: 6px;
+  --frame-line: color-mix(in srgb, var(--accent) 55%, transparent);
+  padding: var(--mat);
+  background: #f6efe3;
+  border: 1px solid var(--frame-line);
+  border-radius: 0;
+  outline: 1px solid color-mix(in srgb, var(--accent-2) 30%, transparent);
+  outline-offset: calc(-1px - var(--mat));
+  box-shadow:
+    0 0 0 3px var(--paper),
+    0 0 0 4px color-mix(in srgb, var(--accent) 30%, transparent),
+    0 12px 22px -14px rgba(40, 20, 20, 0.45);
+}
+
+.frame-lg {
+  --mat: 14px;
+}
+
+.frame-sm {
+  --mat: 3px;
+  box-shadow:
+    0 0 0 2px var(--paper),
+    0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent),
+    0 6px 12px -8px rgba(40, 20, 20, 0.4);
+}
+
+/* Pet cabinet: each pet under its own glass orb on a burgundy plinth.
+   The orb body is a pale, slightly blue glass sphere (darker at the
+   rim); the glare layer sits on top of the pet so it reads as behind
+   glass. */
+.pet-orb {
+  background:
+    radial-gradient(circle at 50% 62%,
+      color-mix(in srgb, #fff 55%, var(--paper)) 0%,
+      color-mix(in srgb, #fff 20%, var(--paper)) 55%,
+      color-mix(in srgb, var(--ink) 18%, var(--paper)) 100%);
+  border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent);
+  box-shadow:
+    inset 0 -10px 18px color-mix(in srgb, var(--ink) 16%, transparent),
+    0 10px 18px -12px rgba(30, 40, 60, 0.45);
+}
+
+.pet-orb-glare {
+  background:
+    radial-gradient(ellipse 34% 22% at 32% 22%, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0) 70%),
+    radial-gradient(ellipse 20% 8% at 66% 84%, rgb(255 255 255 / 0.45), rgb(255 255 255 / 0) 70%);
+  box-shadow: inset 0 2px 3px rgb(255 255 255 / 0.7);
+}
+
+.pet-plinth-collar {
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+}
+
+.pet-plinth {
+  background: linear-gradient(90deg,
+      color-mix(in srgb, var(--accent) 80%, #fff),
+      var(--accent) 45%,
+      var(--accent-2));
+  box-shadow: 0 6px 10px -6px rgba(40, 20, 20, 0.5);
+}
+
+/* Corner decor: the branch grows out from the top-left corner on load,
+   then keeps a slow breeze-like sway; the vase just fades in. */
+@keyframes decor-grow {
+  from {
+    opacity: 0;
+    transform: scale(0.35) rotate(-8deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Leafy tips: an uneven breeze — a push, a smaller swing back, a settle. */
+@keyframes decor-sway {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  30% {
+    transform: rotate(var(--amp));
+  }
+
+  55% {
+    transform: rotate(calc(var(--amp) * -0.45));
+  }
+
+  75% {
+    transform: rotate(calc(var(--amp) * 0.25));
+  }
+}
+
+/* A leaf lets go, drifts down and sideways while tumbling, then fades.
+   The tail of each cycle is idle (invisible) so drops feel occasional. */
+@keyframes decor-fall {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0deg);
+  }
+
+  3% {
+    opacity: 0.9;
+  }
+
+  30% {
+    opacity: 0.8;
+  }
+
+  40% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) rotate(var(--rot));
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) rotate(var(--rot));
+  }
+}
+
+/* Side-to-side flutter layered on top of the fall. */
+@keyframes decor-flutter {
+  from {
+    transform: translateX(-14px) rotateX(0deg) rotate(-18deg);
+  }
+
+  to {
+    transform: translateX(14px) rotateX(55deg) rotate(18deg);
+  }
+}
+
+.decor-branch {
+  transform-origin: 0 0;
+  /* The branch tip reaches under the page text; dissolve it there so the
+     text stays readable while the branch itself stays big. */
+  mask: linear-gradient(100deg, #000 38%, rgb(0 0 0 / 0.3) 54%, transparent 72%);
+  -webkit-mask: linear-gradient(100deg, #000 38%, rgb(0 0 0 / 0.3) 54%, transparent 72%);
+  animation: decor-grow 1.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.decor-tip {
+  animation-name: decor-sway;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.decor-fall {
+  opacity: 0;
+  animation-name: decor-fall;
+  animation-timing-function: cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+}
+
+.decor-flutter {
+  animation: decor-flutter 1.9s ease-in-out infinite alternate;
+  /* per-leaf duration comes from an inline style */
+}
+
+.decor-vase {
+  animation: decor-fade-in 1.2s ease-out both;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .decor-branch,
+  .decor-tip,
+  .decor-flutter,
+  .decor-vase {
+    animation: none;
+  }
+
+  .decor-fall {
+    display: none;
+  }
 }

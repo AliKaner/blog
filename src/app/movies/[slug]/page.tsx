@@ -21,7 +21,7 @@ export default async function MoviePage({
           <ZoomableImage
             src={movie.posterUrl}
             alt={movie.title}
-            className="h-48 w-32 shrink-0 rounded-sm border border-border object-cover"
+            className="frame h-48 w-32 shrink-0 object-cover"
           />
         )}
         <div>

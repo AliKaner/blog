@@ -30,7 +30,7 @@ export function ProjectsGrid({ projects }: { projects: Project[] }) {
               <ZoomableImage
                 src={coverUrl}
                 alt={project.title}
-                className="h-40 w-full object-cover"
+                className="frame mx-3 mt-3 h-40 w-[calc(100%-1.5rem)] object-cover"
               />
             )}
             <div className="flex flex-1 flex-col gap-1 p-4">

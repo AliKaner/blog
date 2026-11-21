@@ -45,7 +45,7 @@ export default async function TutorialArticlePage({
           <ZoomableImage
             src={article.coverUrl}
             alt={article.title}
-            className="mt-6 w-full rounded-sm border border-border object-cover"
+            className="frame frame-lg mt-6 w-full object-cover"
           />
         )
       )}

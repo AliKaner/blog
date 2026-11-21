@@ -28,7 +28,7 @@ export default async function PlacePage({
               key={i}
               src={url ?? ""}
               alt={place.name}
-              className="h-40 w-56 rounded-sm border border-border object-cover"
+              className="frame h-40 w-56 object-cover"
             />
           ))}
         </div>

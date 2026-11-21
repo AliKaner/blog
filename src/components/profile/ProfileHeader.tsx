@@ -27,7 +27,7 @@ export function ProfileHeader({ profile }: { profile: ProfileData | null }) {
       <div>
         <h1 className="font-heading text-3xl text-ink">{profile.name}</h1>
         {profile.title && (
-          <p className="mt-1 font-mono text-sm text-ink-soft">
+          <p className="mt-1 font-accent text-xl italic text-ink-soft">
             {profile.title}
           </p>
         )}
@@ -43,7 +43,7 @@ export function ProfileHeader({ profile }: { profile: ProfileData | null }) {
               href={profile[l.key] as string}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-full border border-border px-3 py-1 text-sm text-ink-soft no-underline hover:border-accent hover:text-accent"
+              className="rounded-full border border-accent/35 bg-accent/5 px-3 py-1 text-sm text-accent no-underline transition-colors hover:border-accent hover:bg-accent hover:text-paper"
             >
               {l.label}
             </a>

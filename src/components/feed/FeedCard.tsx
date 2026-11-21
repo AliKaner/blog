@@ -30,7 +30,7 @@ export function FeedCard({
         <img
           src={imageUrl}
           alt=""
-          className="h-20 w-14 shrink-0 rounded-sm border border-border object-cover"
+          className="frame frame-sm h-20 w-14 shrink-0 object-cover"
         />
       )}
       <div className="min-w-0">

@@ -14,7 +14,7 @@ function drawFrame(letter: string): string {
   if (!ctx) return "";
 
   const radius = 6;
-  ctx.fillStyle = "#0a0a12";
+  ctx.fillStyle = "#d3e1f1";
   ctx.beginPath();
   ctx.moveTo(radius, 0);
   ctx.arcTo(SIZE, 0, SIZE, SIZE, radius);
@@ -24,7 +24,7 @@ function drawFrame(letter: string): string {
   ctx.closePath();
   ctx.fill();
 
-  ctx.fillStyle = "#ff2bd6";
+  ctx.fillStyle = "#6f3034";
   ctx.font = "700 20px Arial, Helvetica, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";

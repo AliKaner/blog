@@ -69,7 +69,7 @@ export function ZoomableImage({
               src={src}
               alt={alt}
               onClick={(e) => e.stopPropagation()}
-              className="max-h-[88vh] max-w-[92vw] border border-border object-contain shadow-[8px_8px_0_0_var(--accent)]"
+              className="frame frame-lg max-h-[88vh] max-w-[92vw] object-contain"
             />
           </div>,
           document.body,

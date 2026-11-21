@@ -109,8 +109,11 @@ function Cell({ week }: { week: Week }) {
       <div style={{ height: CELL, width: CELL, background: cellColor(count) }} />
       <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 hidden w-56 -translate-x-1/2 group-hover:block">
         <div
-          className="border border-border p-2.5"
-          style={{ background: "var(--card)", boxShadow: "4px 4px 0 0 var(--accent)" }}
+          className="rounded-lg border border-border p-2.5"
+          style={{
+            background: "var(--card)",
+            boxShadow: "0 10px 24px -12px rgba(0, 0, 0, 0.6)",
+          }}
         >
           <p className="font-mono text-[10px] uppercase tracking-wide text-accent">
             {formatDate(week.start)} – {formatDate(weekEnd)}

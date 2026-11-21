@@ -24,7 +24,7 @@ export default async function PostPage({
         <ZoomableImage
           src={post.coverUrl}
           alt={post.title}
-          className="mt-6 w-full rounded-sm border border-border object-cover"
+          className="frame frame-lg mt-6 w-full object-cover"
         />
       )}
       <div className="mt-8">

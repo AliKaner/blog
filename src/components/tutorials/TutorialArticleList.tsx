@@ -34,7 +34,7 @@ export function TutorialArticleList({
               <img
                 src={article.coverUrl}
                 alt=""
-                className="h-20 w-28 shrink-0 rounded-sm border border-border object-cover"
+                className="frame frame-sm h-20 w-28 shrink-0 object-cover"
               />
             )}
             <div className="min-w-0">
