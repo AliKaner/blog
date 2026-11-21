@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { CursorFanDemo } from "./demos/CursorFanDemo";
 import { MorphRailDemo } from "./demos/MorphRailDemo";
 import { OrbRatingDemo, OrbSearchDemo } from "./demos/OrbDemos";
+import { YearHeatmapDemo } from "./demos/YearHeatmapDemo";
 
 export type ComponentEntry = {
   title: string;
@@ -43,5 +44,12 @@ export const componentRegistry: ComponentEntry[] = [
       "A cursor picker: a rosette medallion that fans engraved cursors out along an arc — a hatched stylus, a spear and a quill, each turning over in reverse on anything clickable.",
     render: () => <CursorFanDemo />,
     sourcePath: "src/components/components/library/CursorFan.tsx",
+  },
+  {
+    title: "Year Heatmap",
+    description:
+      "A year-by-year activity grid, one square per week. Hover a week for an engraved card — its number, dates, a count, a breakdown by kind and the entries themselves.",
+    render: () => <YearHeatmapDemo />,
+    sourcePath: "src/components/components/library/YearHeatmap.tsx",
   },
 ];
