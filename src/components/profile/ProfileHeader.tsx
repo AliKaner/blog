@@ -35,15 +35,17 @@ export function ProfileHeader({ profile }: { profile: ProfileData | null }) {
       {profile.bio && (
         <p className="max-w-2xl text-ink-soft">{profile.bio}</p>
       )}
+      {/* A row of rosettes; each opens into its label on hover. */}
       {links.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="mt-1 flex flex-wrap items-center gap-1">
           {links.map((l) => (
             <a
               key={l.key}
               href={profile[l.key] as string}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-full border border-accent/35 bg-accent/5 px-3 py-1 text-sm text-accent no-underline transition-colors hover:border-accent hover:bg-accent hover:text-paper"
+              className="btn-orb"
+              aria-label={`${l.label} (opens in a new tab)`}
             >
               {l.label}
             </a>
