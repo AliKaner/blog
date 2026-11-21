@@ -39,7 +39,9 @@ export function ListFilters({ params, noun }: { params: ListParams; noun: string
   }, [search]);
 
   return (
-    <div className={`flex flex-col gap-4 transition-opacity ${pending ? "opacity-60" : ""}`}>
+    <div
+      className={`flex flex-wrap items-center gap-x-5 gap-y-3 transition-opacity ${pending ? "opacity-60" : ""}`}
+    >
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-2">
         {SORTS.map((s, i) => (
           <span key={s.value} className="flex items-baseline">
@@ -64,7 +66,11 @@ export function ListFilters({ params, noun }: { params: ListParams; noun: string
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+      <span aria-hidden className="hidden text-accent/60 sm:inline">
+        ❧
+      </span>
+
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-3">
         <OrbRating
           value={params.rating ?? null}
           onChange={(rating) => go({ ...params, rating: rating ?? undefined })}

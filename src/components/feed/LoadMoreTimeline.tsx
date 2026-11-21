@@ -76,17 +76,46 @@ function WallCard({ item }: { item: WallItem }) {
   );
 }
 
+/** A rating band drawn as a tiny engraved scale: ten ticks on a hairline,
+    the ones up to the band inked in burgundy. */
+function BandScale({ band }: { band: number }) {
+  return (
+    <span aria-hidden className="flex items-end gap-[3px] border-b border-ink-soft/40 pb-px">
+      {Array.from({ length: 10 }, (_, i) => (
+        <span
+          key={i}
+          className={`w-px ${i === 4 || i === 9 ? "h-2" : "h-1.5"} ${i < band ? "bg-accent" : "bg-ink-soft/35"}`}
+        />
+      ))}
+    </span>
+  );
+}
+
+/** Section heading: the title, a double rule running out to a small
+    rosette, and the section's count in italics. */
+function WallHeading({ title, count, noun }: { title: string; count: number; noun?: string }) {
+  const band = /^Rated (\d+)$/.exec(title)?.[1];
+  return (
+    <h2 className="mb-4 flex items-center gap-3 font-heading text-[11px] uppercase tracking-[0.18em] text-ink-soft">
+      <span className="shrink-0">{title}</span>
+      {band !== undefined && <BandScale band={Number(band)} />}
+      <span aria-hidden className="h-[3px] flex-1 border-y border-border" />
+      <span aria-hidden className="text-[10px] tracking-normal text-accent/70">❦</span>
+      <span className="shrink-0 font-accent text-[13px] normal-case italic tracking-normal">
+        {count.toLocaleString("en")}
+        {noun ? ` ${count === 1 ? noun.replace(/s$/, "") : noun}` : ""}
+      </span>
+    </h2>
+  );
+}
+
 /** The wall itself: items sectioned by month or rating, six to a row. */
-export function PosterWall({ items, args }: { items: WallItem[]; args: ListArgs }) {
+export function PosterWall({ items, args, noun }: { items: WallItem[]; args: ListArgs; noun?: string }) {
   return (
     <div className="flex flex-col gap-10">
       {sections(items, sectionKey(args)).map((section, i) => (
         <section key={`${section.title}-${i}`}>
-          {section.title && (
-            <h2 className="mb-4 border-b border-border pb-1 font-heading text-[11px] uppercase tracking-[0.18em] text-ink-soft">
-              {section.title}
-            </h2>
-          )}
+          {section.title && <WallHeading title={section.title} count={section.items.length} noun={noun} />}
           <div className="grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-4 md:grid-cols-6">
             {section.items.map((item) => (
               <WallCard key={item.id} item={item} />
@@ -97,6 +126,7 @@ export function PosterWall({ items, args }: { items: WallItem[]; args: ListArgs 
     </div>
   );
 }
+
 
 /**
  * A dense wall of posters that grows as the visitor scrolls: the server
@@ -141,7 +171,7 @@ function GrowingWall({
 
   return (
     <div>
-      <PosterWall items={items} args={args} />
+      <PosterWall items={items} args={args} noun={noun} />
       <div ref={sentinel} className="mt-10 flex flex-col items-center gap-3 text-center">
         {total !== null && (
           <p className="font-heading text-[11px] uppercase tracking-[0.18em] text-ink-soft">

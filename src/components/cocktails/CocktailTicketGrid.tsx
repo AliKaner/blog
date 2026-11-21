@@ -14,81 +14,52 @@ type Cocktail = {
   triedAt: number;
 };
 
-// Small deterministic tilt per card (no Math.random, so SSR/CSR markup
-// matches) — alternates the "pinned bar tab" feel across the grid.
-const TILTS = [-1.4, 0.9, -0.6, 1.2, -1, 0.6];
-
+/**
+ * The bar shelf: small upright plates, one framed square per drink, with
+ * a short caption under it — title, rating glasses, then spirit, a line of
+ * ingredients and the date. Same rhythm as the Movies/Books wall.
+ */
 export function CocktailTicketGrid({ cocktails }: { cocktails: Cocktail[] }) {
   return (
-    <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-      {cocktails.map((cocktail, i) => {
-        const shownIngredients = cocktail.ingredients?.slice(0, 4) ?? [];
-        const extraCount = (cocktail.ingredients?.length ?? 0) - shownIngredients.length;
+    <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+      {cocktails.map((cocktail) => (
+        <Link key={cocktail._id} href={`/cocktails/${cocktail.slug}`} className="group block no-underline">
+          <div className="frame frame-sm relative aspect-square w-full overflow-hidden transition-[filter] duration-200 group-hover:brightness-105">
+            {cocktail.imageUrl ? (
+              // Whole photo, never cropped: a portrait glass shot would lose
+              // its rim and garnish under object-cover.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={cocktail.imageUrl}
+                alt=""
+                loading="lazy"
+                className="h-full w-full object-contain p-2"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <CocktailGlassIcon className="h-8 w-8 text-accent/40" />
+              </div>
+            )}
+          </div>
 
-        return (
-          <Link
-            key={cocktail._id}
-            href={`/cocktails/${cocktail.slug}`}
-            className="no-underline"
-          >
-            <div
-              className="ticket flex h-full flex-col overflow-hidden"
-              style={{ "--tilt": `${TILTS[i % TILTS.length]}deg` } as React.CSSProperties}
-            >
-              <div className="relative aspect-square w-full shrink-0 bg-paper">
-                {cocktail.imageUrl ? (
-                  // Full photo, never cropped — a portrait glass shot loses
-                  // its rim/garnish under object-cover, so letterbox it
-                  // instead of cutting it down to a thin cover-fit sliver.
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={cocktail.imageUrl}
-                    alt={cocktail.title}
-                    className="h-full w-full object-contain p-3"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center">
-                    <CocktailGlassIcon className="h-10 w-10 text-border" />
-                  </div>
-                )}
-                {cocktail.baseSpirit && (
-                  <span className="absolute left-2 top-2 border border-accent-2 bg-paper/90 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-accent-2">
-                    {cocktail.baseSpirit}
-                  </span>
-                )}
-              </div>
-              <div className="flex flex-1 flex-col gap-2 p-4">
-                <p className="font-heading text-lg leading-snug text-ink">
-                  {cocktail.title}
-                </p>
-                {typeof cocktail.rating === "number" && (
-                  <RatingGlasses rating={cocktail.rating} />
-                )}
-                {shownIngredients.length > 0 && (
-                  <div className="mt-1 flex flex-wrap gap-1.5">
-                    {shownIngredients.map((ing) => (
-                      <span
-                        key={ing}
-                        className="rounded-sm border border-border bg-paper px-1.5 py-0.5 font-mono text-[10px] text-ink-soft"
-                      >
-                        {ing}
-                      </span>
-                    ))}
-                    {extraCount > 0 && (
-                      <span className="px-1.5 py-0.5 font-mono text-[10px] text-ink-soft">
-                        +{extraCount}
-                      </span>
-                    )}
-                  </div>
-                )}
-                <p className="mt-auto pt-2 text-right font-mono text-[10px] uppercase tracking-wide text-accent">
-                  {formatDate(cocktail.triedAt)}
-                </p>
-              </div>
+          <p className="mt-2 line-clamp-2 font-heading text-[15px] leading-tight text-ink transition-colors group-hover:text-accent">
+            {cocktail.title}
+          </p>
+          {typeof cocktail.rating === "number" && (
+            <div className="mt-1">
+              <RatingGlasses rating={cocktail.rating} />
             </div>
-          </Link>
-        );
-      })}
+          )}
+          {cocktail.ingredients && cocktail.ingredients.length > 0 && (
+            <p className="mt-1 line-clamp-1 font-accent text-[13px] italic text-ink-soft">
+              {cocktail.ingredients.join(", ")}
+            </p>
+          )}
+          <p className="mt-1 truncate font-mono text-[10px] uppercase tracking-wide text-ink-soft">
+            {[cocktail.baseSpirit, formatDate(cocktail.triedAt)].filter(Boolean).join(" · ")}
+          </p>
+        </Link>
+      ))}
     </div>
   );
 }

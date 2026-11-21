@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Keep the dev badge clear of the left nav rail and the corner decor.
-  devIndicators: { position: "top-right" },
+  // Keep the dev badge clear of the nav rail, the corner decor and the cursor picker.
+  devIndicators: { position: "bottom-right" },
 
   async redirects() {
     return [

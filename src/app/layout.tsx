@@ -14,6 +14,7 @@ import { GrainOverlay } from "@/components/texture/GrainOverlay";
 import { CornerDecor } from "@/components/texture/CornerDecor";
 import { SiteNav } from "@/components/nav/SiteNav";
 import { FaviconCycler } from "@/components/FaviconCycler";
+import { CursorPicker } from "@/components/cursor/CursorPicker";
 import { SITE_URL } from "@/lib/site";
 import { AUTHOR } from "@/lib/seo";
 import sectionMeta from "@/lib/sectionMeta.json";
@@ -96,6 +97,7 @@ export default function RootLayout({
         <CornerDecor />
         <GrainOverlay />
         <FaviconCycler />
+        <CursorPicker />
       </body>
     </html>
   );
