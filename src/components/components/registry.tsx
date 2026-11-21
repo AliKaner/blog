@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { CursorFanDemo } from "./demos/CursorFanDemo";
 import { MorphRailDemo } from "./demos/MorphRailDemo";
 import { OrbRatingDemo, OrbSearchDemo } from "./demos/OrbDemos";
 
@@ -32,8 +33,15 @@ export const componentRegistry: ComponentEntry[] = [
   {
     title: "Orb Rating",
     description:
-      "A rating picker that rests as a seal showing the choice and opens into an engraved scale; the chosen numeral is stamped in the seal.",
+      "A rating picker that rests as a seal showing the choice and opens into an engraved half-dial — numerals round a double-ruled arc and a needle that swings to the one you point at.",
     render: () => <OrbRatingDemo />,
     sourcePath: "src/components/components/library/OrbRating.tsx",
+  },
+  {
+    title: "Cursor Fan",
+    description:
+      "A cursor picker: a rosette medallion that fans engraved cursors out along an arc — a hatched stylus, a spear and a quill, each turning over in reverse on anything clickable.",
+    render: () => <CursorFanDemo />,
+    sourcePath: "src/components/components/library/CursorFan.tsx",
   },
 ];
