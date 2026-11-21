@@ -1,43 +1,119 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { usePaginatedQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { JourneyTimeline } from "./JourneyTimeline";
-import type { FeedItemType } from "@/lib/feedTypes";
 import { PAGE_SIZE } from "@/lib/pagination";
 import type { ListSort } from "@/lib/listParams";
 
 /** Filter args passed straight to movies.page / books.page. */
 export type ListArgs = { sort?: ListSort; rating?: number; search?: string };
 
-
-type TimelineItem = {
-  type: FeedItemType;
+export type WallItem = {
   id: string;
-  slug: string;
+  href: string;
   title: string;
+  /** year for films, author for books */
+  sub: string | null;
   date: number;
-  rating?: number | null;
-  imageUrl?: string | null;
+  rating: number | null;
+  imageUrl: string | null;
 };
 
 type Status = "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted";
 
+const MONTH = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" });
+
+/** How a view is sectioned: by month for date order, by rating band for
+    rating order, not at all for search results (relevance order). */
+function sectionKey(args: ListArgs) {
+  if (args.search) return () => "";
+  if (args.sort === "rating-desc" || args.sort === "rating-asc") {
+    return (item: WallItem) => (item.rating === null ? "Unrated" : `Rated ${Math.floor(item.rating)}`);
+  }
+  return (item: WallItem) => MONTH.format(item.date);
+}
+
+function sections(items: WallItem[], key: (i: WallItem) => string) {
+  const out: { title: string; items: WallItem[] }[] = [];
+  for (const item of items) {
+    const title = key(item);
+    const last = out[out.length - 1];
+    if (last && last.title === title) last.items.push(item);
+    else out.push({ title, items: [item] });
+  }
+  return out;
+}
+
+/** One small framed poster/cover with its caption. Without an image, a
+    paper plate carries the title in inscription capitals instead. */
+function WallCard({ item }: { item: WallItem }) {
+  return (
+    <Link href={item.href} className="group block no-underline">
+      {item.imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={item.imageUrl}
+          alt=""
+          loading="lazy"
+          className="frame frame-sm aspect-[2/3] w-full object-cover transition-[filter] duration-200 group-hover:brightness-105"
+        />
+      ) : (
+        <div className="frame frame-sm flex aspect-[2/3] w-full items-center justify-center p-2 text-center">
+          <span className="line-clamp-4 font-heading text-[11px] leading-snug tracking-wide text-accent">
+            {item.title}
+          </span>
+        </div>
+      )}
+      <p className="mt-2 line-clamp-2 text-[13px] leading-tight text-ink transition-colors group-hover:text-accent">
+        {item.title}
+      </p>
+      <p className="mt-0.5 truncate font-mono text-[10px] text-ink-soft">
+        {[item.sub, item.rating !== null ? `${item.rating}/10` : null].filter(Boolean).join(" · ")}
+      </p>
+    </Link>
+  );
+}
+
+/** The wall itself: items sectioned by month or rating, six to a row. */
+export function PosterWall({ items, args }: { items: WallItem[]; args: ListArgs }) {
+  return (
+    <div className="flex flex-col gap-10">
+      {sections(items, sectionKey(args)).map((section, i) => (
+        <section key={`${section.title}-${i}`}>
+          {section.title && (
+            <h2 className="mb-4 border-b border-border pb-1 font-heading text-[11px] uppercase tracking-[0.18em] text-ink-soft">
+              {section.title}
+            </h2>
+          )}
+          <div className="grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-4 md:grid-cols-6">
+            {section.items.map((item) => (
+              <WallCard key={item.id} item={item} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 /**
- * A timeline that grows as the visitor scrolls: the server renders the
- * first page (fast, crawlable), then Convex pagination fetches PAGE_SIZE
- * more each time the end comes into view. Never loads the whole
- * collection at once.
+ * A dense wall of posters that grows as the visitor scrolls: the server
+ * renders the first page (fast, crawlable), then Convex pagination
+ * fetches PAGE_SIZE more each time the end comes into view. Never loads
+ * the whole collection at once.
  */
-function GrowingTimeline({
+function GrowingWall({
   items,
+  args,
   status,
   loadMore,
   total,
   noun,
 }: {
-  items: TimelineItem[];
+  items: WallItem[];
+  args: ListArgs;
   status: Status;
   loadMore: (n: number) => void;
   total: number | null;
@@ -53,7 +129,7 @@ function GrowingTimeline({
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) loadMore(PAGE_SIZE);
       },
-      { rootMargin: "600px 0px" },
+      { rootMargin: "800px 0px" },
     );
     io.observe(el);
     return () => io.disconnect();
@@ -65,7 +141,7 @@ function GrowingTimeline({
 
   return (
     <div>
-      <JourneyTimeline items={items} />
+      <PosterWall items={items} args={args} />
       <div ref={sentinel} className="mt-10 flex flex-col items-center gap-3 text-center">
         {total !== null && (
           <p className="font-heading text-[11px] uppercase tracking-[0.18em] text-ink-soft">
@@ -93,11 +169,11 @@ type MoviePage = {
   posterUrl: string | null;
 };
 
-const movieItem = (m: MoviePage): TimelineItem => ({
-  type: "movie",
+const movieItem = (m: MoviePage): WallItem => ({
   id: m._id,
-  slug: m.slug,
-  title: m.year ? `${m.title} (${m.year})` : m.title,
+  href: `/movies/${m.slug}`,
+  title: m.title,
+  sub: m.year ? String(m.year) : null,
   date: m.watchedAt,
   rating: m.rating,
   imageUrl: m.posterUrl,
@@ -115,7 +191,7 @@ export function MoviesTimeline({
   const { results, status, loadMore } = usePaginatedQuery(api.movies.page, args, { initialNumItems: PAGE_SIZE });
   // Until the live query answers, show what the server rendered.
   const items = (status === "LoadingFirstPage" ? initial : results).map(movieItem);
-  return <GrowingTimeline items={items} status={status} loadMore={loadMore} total={total} noun="films" />;
+  return <GrowingWall items={items} args={args} status={status} loadMore={loadMore} total={total} noun="films" />;
 }
 
 type BookPage = {
@@ -128,11 +204,11 @@ type BookPage = {
   coverUrl: string | null;
 };
 
-const bookItem = (b: BookPage): TimelineItem => ({
-  type: "book",
+const bookItem = (b: BookPage): WallItem => ({
   id: b._id,
-  slug: b.slug,
-  title: b.author ? `${b.title} — ${b.author}` : b.title,
+  href: `/books/${b.slug}`,
+  title: b.title,
+  sub: b.author,
   date: b.finishedAt,
   rating: b.rating,
   imageUrl: b.coverUrl,
@@ -149,5 +225,5 @@ export function BooksTimeline({
 }) {
   const { results, status, loadMore } = usePaginatedQuery(api.books.page, args, { initialNumItems: PAGE_SIZE });
   const items = (status === "LoadingFirstPage" ? initial : results).map(bookItem);
-  return <GrowingTimeline items={items} status={status} loadMore={loadMore} total={total} noun="books" />;
+  return <GrowingWall items={items} args={args} status={status} loadMore={loadMore} total={total} noun="books" />;
 }
