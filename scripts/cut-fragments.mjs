@@ -1,6 +1,6 @@
 // Cuts small sculpture fragments out of the engravings in public/decor/
 // engravings (already cut from their paper) and tints them along the site's
-// burgundy ramp, for small decorative uses (the cursor picker).
+// burgundy ramp, for small decorative uses (the cursor picker's medallion).
 //
 //   node scripts/cut-fragments.mjs
 //
@@ -14,9 +14,7 @@ const SRC = "public/decor/engravings";
 const OUT = "public/decor/fragments";
 
 const FRAGMENTS = [
-  { name: "victory", from: "victory", crop: [365, 300, 760, 980], h: 360 },
   { name: "medusa", from: "trophy", crop: [70, 55, 260, 245], h: 200, vignette: true },
-  { name: "griffins", from: "griffin", crop: [0, 250, 187, 440], h: 220 },
 ];
 
 // Burgundy ramp, dark → light (same stops as src/components/texture/Engraving.tsx).

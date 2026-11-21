@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 /* The cursor picker: a Medusa medallion in the top-right corner. Click it
-   and the cursor plates fan out down-left along an engraved arc, with
-   sculpture fragments (scripts/cut-fragments.mjs) around them — Victory
-   holding out her wreath at the top, the griffin pedestal underneath.
+   and the cursor plates fan out down-left along an engraved arc. The
+   medallion is cut from an engraving (scripts/cut-fragments.mjs).
    The choice is kept in localStorage and set as html[data-cursor]. */
 
 type CursorId = "plain" | "stylus" | "spear" | "quill";
@@ -14,22 +13,66 @@ const INK = "#6f3034";
 const DEEP = "#450e14";
 const PAPER = "#f6efe3";
 
-/* Each cursor's artwork, drawn on a 32px grid with its hotspot. */
+/* Each cursor's artwork, drawn on a 32px grid with its hotspot. They're
+   drawn like the engravings: burgundy bodies, a paper outline so they
+   read on any background, and fine paper-coloured hatching for shade. */
+const hatch = (from: number, to: number, step: number, line: (v: number) => string) => {
+  const out: string[] = [];
+  for (let v = from; v <= to; v += step) out.push(line(v));
+  return out.join(" ");
+};
+
 const ART: Record<Exclude<CursorId, "plain">, { svg: string; hot: [number, number] }> = {
-  // An engraved arrowhead: burgundy, with a paper outline and a hatch line.
+  // An engraved pointer: the classic arrow with a double plate-mark
+  // outline, diagonal hatching over its shadow side and a rosette pin.
   stylus: {
-    hot: [3, 3],
-    svg: `<path d="M3 3 L25 13 L15.5 15.5 L13 25 Z" fill="${INK}" stroke="${PAPER}" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.5 6.5 L15 15" stroke="${PAPER}" stroke-width="0.9" stroke-linecap="round"/>`,
+    hot: [4, 3],
+    svg: `<defs><clipPath id="cp-st"><path d="M4 3 L4 23.5 L9 18.8 L12.6 27 L16.2 25.4 L12.7 17.4 L19.6 17.4 Z"/></clipPath></defs>
+<path d="M4 3 L4 23.5 L9 18.8 L12.6 27 L16.2 25.4 L12.7 17.4 L19.6 17.4 Z" fill="${INK}" stroke="${PAPER}" stroke-width="1.6" stroke-linejoin="round"/>
+<g clip-path="url(#cp-st)" stroke="${PAPER}" stroke-width="0.55" stroke-opacity="0.55">
+<path d="${hatch(-4, 30, 2.2, (v) => `M${v} 30 L${v + 16} 14`)}"/>
+</g>
+<path d="M5.6 6.8 L5.6 19.6 L9.4 16 L13 16 Z" fill="none" stroke="${PAPER}" stroke-width="0.6" stroke-opacity="0.8" stroke-linejoin="round"/>
+<path d="M4 3 L19.6 17.4" stroke="${DEEP}" stroke-width="0.8" stroke-opacity="0.7"/>
+<circle cx="14.4" cy="26.2" r="1.15" fill="${PAPER}"/><circle cx="14.4" cy="26.2" r="0.5" fill="${DEEP}"/>`,
   },
-  // Athena's spear: a leaf blade on a short shaft, tip to the top-left.
+  // Athena's spear: a leaf blade with a raised midrib and hatched flank,
+  // a collar with two volutes, a banded shaft and a round butt cap.
+  // Drawn upright, then turned so the point is at the top-left.
   spear: {
-    hot: [3, 3],
-    svg: `<g stroke="${PAPER}" stroke-width="1.4" stroke-linejoin="round"><path d="M3 3 C9 5 13 8 14.5 12.5 L12.5 14.5 C8 13 5 9 3 3 Z" fill="${INK}"/><path d="M13 13 L27.5 27.5" stroke="${PAPER}" stroke-width="4" stroke-linecap="round"/></g><path d="M13 13 L27.5 27.5" stroke="${DEEP}" stroke-width="2" stroke-linecap="round"/><path d="M11.2 15.8 L15.8 11.2" stroke="${DEEP}" stroke-width="2.2" stroke-linecap="round"/><path d="M4.5 4.5 L12.5 12.5" stroke="${PAPER}" stroke-width="0.8"/>`,
+    hot: [5, 5],
+    svg: `<defs><clipPath id="cp-sp"><path d="M16 1 C19.6 5 20.2 9.6 18.1 13 L16 14.6 L13.9 13 C11.8 9.6 12.4 5 16 1 Z"/></clipPath></defs>
+<g transform="rotate(-45 16 16)">
+<path d="M16 17 L16 28.2" stroke="${PAPER}" stroke-width="3.8" stroke-linecap="round"/>
+<path d="M16 17 L16 28.2" stroke="${DEEP}" stroke-width="2" stroke-linecap="round"/>
+<path d="M14.9 20.5 H17.1 M14.9 22 H17.1 M14.9 25.2 H17.1" stroke="${PAPER}" stroke-width="0.6"/>
+<path d="M16 1 C19.6 5 20.2 9.6 18.1 13 L16 14.6 L13.9 13 C11.8 9.6 12.4 5 16 1 Z" fill="${INK}" stroke="${PAPER}" stroke-width="1.3" stroke-linejoin="round"/>
+<g clip-path="url(#cp-sp)" stroke="${PAPER}" stroke-width="0.5" stroke-opacity="0.6">
+<path d="${hatch(4, 13, 1.6, (v) => `M16 ${v} L20 ${v + 2.2}`)}"/>
+</g>
+<path d="M16 2.6 L16 13.6" stroke="${PAPER}" stroke-width="0.7"/>
+<rect x="13.4" y="14.4" width="5.2" height="2.4" rx="1.1" fill="${DEEP}" stroke="${PAPER}" stroke-width="0.8"/>
+<path d="M13.4 15.6 C11.8 15.6 11.6 17.4 12.8 17.4 M18.6 15.6 C20.2 15.6 20.4 17.4 19.2 17.4" fill="none" stroke="${PAPER}" stroke-width="0.7" stroke-linecap="round"/>
+<circle cx="16" cy="29.4" r="1.6" fill="${INK}" stroke="${PAPER}" stroke-width="0.8"/>
+</g>`,
   },
-  // A quill: nib at the bottom-left, feather sweeping up-right.
+  // A quill: a curved vane with barbs combed out on both sides of the
+  // shaft, a split in the feather, and a slit nib at the bottom-left.
   quill: {
-    hot: [3, 29],
-    svg: `<path d="M3 29 L9 20 C12 12 19 5 29 3 C27 13 20 20 12 23 Z" fill="${INK}" stroke="${PAPER}" stroke-width="1.4" stroke-linejoin="round"/><path d="M3 29 L22 10" stroke="${PAPER}" stroke-width="1" stroke-linecap="round"/><path d="M13 19 L10 16 M16 16 L13.5 12.5 M19 13 L17 9.5 M15 18 L18.5 19.5 M18 15 L22 15.5" stroke="${PAPER}" stroke-width="0.7" stroke-linecap="round"/>`,
+    hot: [5, 27],
+    svg: `<defs><clipPath id="cp-qu"><path d="M16 1.5 C21.4 4.6 22.4 10.6 20.4 17.4 C19.4 20.6 17.8 22.6 16.6 23.8 L15.4 23.8 C13.6 20.8 11.6 16.6 11.7 11.8 C11.8 6.8 13.4 3.6 16 1.5 Z"/></clipPath></defs>
+<g transform="rotate(45 16 16)">
+<path d="M16 1.5 C21.4 4.6 22.4 10.6 20.4 17.4 C19.4 20.6 17.8 22.6 16.6 23.8 L15.4 23.8 C13.6 20.8 11.6 16.6 11.7 11.8 C11.8 6.8 13.4 3.6 16 1.5 Z" fill="${INK}" stroke="${PAPER}" stroke-width="1.2" stroke-linejoin="round"/>
+<g clip-path="url(#cp-qu)" stroke="${PAPER}" stroke-width="0.5" stroke-opacity="0.65" fill="none">
+<path d="${hatch(4, 22, 1.5, (v) => `M16.1 ${v} Q18.5 ${v + 0.6} 21.5 ${v + 2.4}`)}"/>
+<path d="${hatch(4, 22, 1.5, (v) => `M15.9 ${v} Q13.5 ${v + 0.6} 10.5 ${v + 2.4}`)}"/>
+</g>
+<path d="M20.9 11.2 L18.4 12.6" stroke="${PAPER}" stroke-width="1"/>
+<path d="M12 15.2 L14.2 16.2" stroke="${PAPER}" stroke-width="1"/>
+<path d="M16 2.6 Q16.5 13 16 24" fill="none" stroke="${PAPER}" stroke-width="0.8"/>
+<path d="M15.1 23.6 L16.9 23.6 L16.7 27.6 L16 31 L15.3 27.6 Z" fill="${DEEP}" stroke="${PAPER}" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M16 27.2 L16 30.2" stroke="${PAPER}" stroke-width="0.4"/>
+</g>`,
   },
 };
 
@@ -46,8 +89,8 @@ const OPTIONS: { id: CursorId; label: string }[] = [
 
 /* The fan: plates on an arc from just below "left" (10°) round to just
    left of "down" (80°), measured from the medallion's centre. */
-const RADIUS = 92;
-const ANGLES = [10, 33.3, 56.7, 80];
+const RADIUS = 83;
+const ANGLES = [15, 35, 55, 75];
 const STORAGE_KEY = "cursor";
 
 const isCursorId = (v: unknown): v is CursorId => OPTIONS.some((o) => o.id === v);
@@ -109,23 +152,19 @@ export function CursorPicker() {
         {CSS}
       </style>
 
-      {/* Fragments and the arc sit behind the plates. */}
+      {/* The engraved arc band the plates sit on. */}
       <span aria-hidden className="cp-deco">
-        <svg className="cp-arc" viewBox="-130 -10 140 140" width="140" height="140">
+        <svg className="cp-arc" viewBox="-110 -6 116 116" width="116" height="116">
           <path
-            d="M -118 0 A 118 118 0 0 0 0 118 L 0 66 A 66 66 0 0 1 -66 0 Z"
+            d="M -104 0 A 104 104 0 0 0 0 104 L 0 62 A 62 62 0 0 1 -62 0 Z"
             fill="var(--card)"
-            fillOpacity="0.85"
+            fillOpacity="0.88"
             stroke="var(--accent)"
             strokeOpacity="0.45"
           />
-          <path d="M -112 0 A 112 112 0 0 0 0 112" fill="none" stroke="var(--accent)" strokeOpacity="0.25" />
-          <path d="M -72 0 A 72 72 0 0 1 0 72" fill="none" stroke="var(--accent)" strokeOpacity="0.25" />
+          <path d="M -100 0 A 100 100 0 0 0 0 100" fill="none" stroke="var(--accent)" strokeOpacity="0.22" />
+          <path d="M -66 0 A 66 66 0 0 1 0 66" fill="none" stroke="var(--accent)" strokeOpacity="0.22" />
         </svg>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/decor/fragments/victory.webp" alt="" className="cp-victory" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/decor/fragments/griffins.webp" alt="" className="cp-griffins" />
       </span>
 
       <ul className="cp-fan" role="radiogroup" aria-label="Cursor" inert={!open}>
@@ -255,10 +294,10 @@ ${cursorRules}
 .cp-fan { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; z-index: 1; }
 .cp-item {
   position: absolute;
-  left: calc(50% - 1.3rem);
-  top: calc(50% - 1.3rem);
-  width: 2.6rem;
-  height: 2.6rem;
+  left: calc(50% - 1rem);
+  top: calc(50% - 1rem);
+  width: 2rem;
+  height: 2rem;
   opacity: 0;
   transform: translate(0, 0) scale(0.3);
   transition: transform 0.5s var(--cp-spring), opacity 0.2s ease;
@@ -294,7 +333,7 @@ ${cursorRules}
     inset 0 0 0 3px var(--accent);
 }
 .cp-plate:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.cp-glyph { width: 1.35rem; height: 1.35rem; }
+.cp-glyph { width: 1.2rem; height: 1.2rem; }
 
 .cp-label {
   position: absolute;
@@ -312,7 +351,7 @@ ${cursorRules}
 }
 .cp-item:hover .cp-label, .cp-item:focus-within .cp-label { opacity: 1; translate: 0 -50%; }
 
-/* Arc and sculpture, anchored on the medallion's centre. */
+/* The arc, anchored on the medallion's centre. */
 .cp-deco {
   position: absolute;
   left: 50%;
@@ -324,37 +363,14 @@ ${cursorRules}
 }
 .cp-arc {
   position: absolute;
-  left: -130px;
-  top: -10px;
+  left: -110px;
+  top: -6px;
   opacity: 0;
   transform: scale(0.4);
-  transform-origin: 130px 10px;
+  transform-origin: 110px 6px;
   transition: transform 0.5s var(--cp-spring), opacity 0.25s ease;
 }
-.cp-victory, .cp-griffins {
-  position: absolute;
-  width: auto;
-  max-width: none;
-  opacity: 0;
-  transition: transform 0.6s var(--cp-spring), opacity 0.35s ease;
-}
-/* Victory stands left of the arc, her wreath held out to the first plate. */
-.cp-victory {
-  left: -192px;
-  top: -40px;
-  height: 128px;
-  transform: translate(20px, 10px) rotate(4deg);
-}
-/* The griffin pedestal carries the last plate. */
-.cp-griffins {
-  left: -50px;
-  top: 116px;
-  height: 64px;
-  transform: translateY(-16px);
-}
 .cp[data-open="true"] .cp-arc { opacity: 1; transform: scale(1); }
-.cp[data-open="true"] .cp-victory { opacity: 1; transform: none; transition-delay: 0.12s; }
-.cp[data-open="true"] .cp-griffins { opacity: 1; transform: none; transition-delay: 0.18s; }
 
 @media (prefers-reduced-motion: reduce) {
   .cp, .cp * { transition: none !important; }
