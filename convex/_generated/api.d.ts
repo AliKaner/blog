@@ -11,6 +11,7 @@
 import type * as adminSessions from "../adminSessions.js";
 import type * as books from "../books.js";
 import type * as cocktails from "../cocktails.js";
+import type * as crons from "../crons.js";
 import type * as customPets from "../customPets.js";
 import type * as drawings from "../drawings.js";
 import type * as files from "../files.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   adminSessions: typeof adminSessions;
   books: typeof books;
   cocktails: typeof cocktails;
+  crons: typeof crons;
   customPets: typeof customPets;
   drawings: typeof drawings;
   files: typeof files;
