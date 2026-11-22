@@ -28,6 +28,9 @@ const FRAGMENTS = ["medusa-right", "atlas", "griffins", "masks", "shield-boss", 
 const STATUES = ["statue-griffin", "statue-cinerary", "statue-ramhead", "statue-candelabrum", "statue-victory", "statue-vase"];
 const piece = (name: string) => `/decor/fragments/${name}.webp`;
 
+/** Most posters a day hangs in the margin before they move beneath it. */
+const MARGIN = 3;
+
 const fmt = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-GB", { ...o, timeZone: "UTC" });
 const DAY = fmt({ day: "2-digit" });
 const MON = fmt({ month: "short" });
@@ -55,18 +58,56 @@ function byMonth(items: Item[]) {
   return months;
 }
 
-/** One day as one sentence: "Watched X, 6/10 and read Y." */
-function Sentence({ items }: { items: Item[] }) {
-  const parts: ReactNode[] = items.map((i, k) => (
-    <span key={`${i.type}-${i.id}`}>
-      {k > 0 && (k === items.length - 1 ? " and " : "; ")}
-      <span className="text-ink-soft">{k === 0 ? VERB[i.type] : VERB[i.type].toLowerCase()} </span>
-      <Link href={href(i)} className="link-ornate italic">
-        {i.title}
+/** A run longer than this names its first few and folds the rest away. */
+const LONG_RUN = 5;
+const SHOWN = 3;
+
+function Title({ item, sep }: { item: Item; sep: string }) {
+  return (
+    <span>
+      {sep}
+      <Link href={href(item)} className="link-ornate italic">
+        {item.title}
       </Link>
-      {typeof i.rating === "number" && <span className="text-ink-soft">, {i.rating}/10</span>}
+      {typeof item.rating === "number" && <span className="text-ink-soft">, {item.rating}/10</span>}
     </span>
-  ));
+  );
+}
+
+/** One day as one sentence: "Watched X, 6/10; Y and read Z." The verb is
+    said once for a run of the same kind, and a binge ("ep22; ep21; …")
+    names three and folds the rest behind "and 19 more". */
+function Sentence({ items }: { items: Item[] }) {
+  const runs: Item[][] = [];
+  for (const item of items) {
+    const run = runs[runs.length - 1];
+    if (run && run[0].type === item.type) run.push(item);
+    else runs.push([item]);
+  }
+  const parts: ReactNode[] = runs.map((run, r) => {
+    const verb = VERB[run[0].type];
+    const folded = run.length > LONG_RUN ? run.slice(SHOWN) : [];
+    const shown = folded.length > 0 ? run.slice(0, SHOWN) : run;
+    return (
+      <span key={`${run[0].type}-${run[0].id}`}>
+        {r > 0 && (r === runs.length - 1 ? " and " : "; ")}
+        <span className="text-ink-soft">{r === 0 ? verb : verb.toLowerCase()} </span>
+        {shown.map((item, k) => (
+          <Title key={item.id} item={item} sep={k > 0 ? "; " : ""} />
+        ))}
+        {folded.length > 0 && (
+          <details className="group/more inline [&[open]::details-content]:inline">
+            <summary className="inline cursor-pointer list-none text-ink-soft underline decoration-dotted underline-offset-4 hover:text-accent group-open/more:hidden [&::-webkit-details-marker]:hidden">
+              {" "}and {folded.length} more…
+            </summary>
+            {folded.map((item) => (
+              <Title key={item.id} item={item} sep="; " />
+            ))}
+          </details>
+        )}
+      </span>
+    );
+  });
   return (
     <>
       {parts}
@@ -124,21 +165,24 @@ export function JourneyChronicle({
               {m.days.map((d) => {
                 const pics = d.items.filter((i) => i.imageUrl);
                 const marked = highlight?.(d.date);
+                // A few posters hang in the margin beside the line; a crowded
+                // day (or a narrow screen) lays them in a row beneath it.
+                const margin = pics.length <= MARGIN;
                 return (
                   <div
                     key={dayKey(d.date)}
-                    className={`grid grid-cols-[1fr_auto] items-start gap-4 border-b border-dotted border-border py-2 last:border-0 ${
+                    className={`grid grid-cols-1 items-start gap-x-4 gap-y-2 ${margin ? "sm:grid-cols-[1fr_auto]" : ""} border-b border-dotted border-border py-2 last:border-0 ${
                       marked ? "-ml-4 border-l-[3px] border-l-accent border-double pl-[13px]" : ""
                     }`}
                   >
-                    <p>
+                    <div>
                       <time dateTime={new Date(d.date).toISOString().slice(0, 10)} className="font-mono text-[11px] not-italic tracking-[0.1em] text-accent">
                         {MON.format(d.date).toUpperCase()} {DAY.format(d.date)}
                       </time>{" "}
                       <Sentence items={d.items} />
-                    </p>
+                    </div>
                     {pics.length > 0 && (
-                      <span className="flex gap-1.5">
+                      <span className={`flex flex-wrap gap-1.5 ${margin ? "sm:flex-nowrap" : ""}`}>
                         {pics.map((i) => (
                           <Link
                             key={`${i.type}-${i.id}`}
