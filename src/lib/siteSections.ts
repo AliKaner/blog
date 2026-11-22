@@ -6,7 +6,6 @@ import {
   Component,
   FileText,
   FolderKanban,
-  GraduationCap,
   Home,
   MapPin,
   Martini,
@@ -30,7 +29,8 @@ export const SITE_SECTIONS: SiteSection[] = [
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/components", label: "Components", icon: Component },
   { href: "/drawings", label: "Drawings", icon: Pencil },
-  { href: "/tutorials", label: "Tutorials", icon: GraduationCap },
+  // Tutorials is hidden from the nav for now; the pages stay reachable.
+  // { href: "/tutorials", label: "Tutorials", icon: GraduationCap },
   { href: "/movies", label: "Movies", icon: Clapperboard },
   { href: "/cocktails", label: "Cocktails", icon: Martini },
   { href: "/places", label: "Places", icon: MapPin },

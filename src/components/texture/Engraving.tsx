@@ -93,7 +93,7 @@ export function Engraving() {
             data-active={active}
             // multiply lets the page's blue into the paper-white highlights, so
             // it reads as ink printed on this page rather than a pasted cutout
-            className={`pointer-events-none fixed bottom-4 right-6 z-0 hidden h-auto select-none mix-blend-multiply transition-[opacity,transform] duration-700 ease-out motion-reduce:transition-none xl:block ${
+            className={`pointer-events-none fixed bottom-0 right-6 z-0 hidden h-auto select-none mix-blend-multiply transition-[opacity,transform] duration-700 ease-out motion-reduce:transition-none xl:block ${
               active ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
             }`}
             style={
