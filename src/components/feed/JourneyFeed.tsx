@@ -6,7 +6,7 @@ import { useConvex } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { JOURNEY_PAGE } from "@/lib/pagination";
-import { JourneyTimeline } from "./JourneyTimeline";
+import { JourneyChronicle } from "./JourneyChronicle";
 
 type Page = FunctionReturnType<typeof api.journey.page>;
 type Cursor = Page["next"];
@@ -82,7 +82,7 @@ export function JourneyFeed({ first, week }: { first: Page; week: number | null 
       {items.length === 0 ? (
         <p className="text-ink-soft">Nothing here yet.</p>
       ) : (
-        <JourneyTimeline items={items} variant="plain" highlight={inWeek ?? undefined} />
+        <JourneyChronicle items={items} highlight={inWeek ?? undefined} />
       )}
 
       <div ref={sentinel} className="mt-10 flex flex-col items-center gap-3 text-center">

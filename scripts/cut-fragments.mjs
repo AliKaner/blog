@@ -23,6 +23,13 @@ const FRAGMENTS = [
   { name: "masks", from: "candelabrum", crop: [140, 955, 330, 1085], h: 120, vignette: true },
   { name: "griffins", from: "cinerary", crop: [70, 100, 250, 205], h: 120, vignette: true },
   { name: "ram-capital", from: "candelabrum", crop: [90, 715, 380, 795], h: 100, vignette: true },
+  // Whole statuettes, tinted, for the Journey chronicle's margins.
+  { name: "statue-griffin", from: "griffin", h: 240 },
+  { name: "statue-ramhead", from: "ramhead", h: 240 },
+  { name: "statue-cinerary", from: "cinerary", h: 240 },
+  { name: "statue-candelabrum", from: "candelabrum", h: 240 },
+  { name: "statue-victory", from: "victory", h: 240 },
+  { name: "statue-vase", from: "vase", h: 240 },
 ];
 
 // Burgundy ramp, dark → light (same stops as src/components/texture/Engraving.tsx).
@@ -41,10 +48,12 @@ function tint(l) {
 mkdirSync(OUT, { recursive: true });
 
 for (const { name, from, crop, h, vignette } of FRAGMENTS) {
-  const [x0, y0, x1, y1] = crop;
-  const { data, info } = await sharp(`${SRC}/${from}.webp`)
-    .ensureAlpha()
-    .extract({ left: x0, top: y0, width: x1 - x0, height: y1 - y0 })
+  const src = sharp(`${SRC}/${from}.webp`).ensureAlpha();
+  if (crop) {
+    const [x0, y0, x1, y1] = crop;
+    src.extract({ left: x0, top: y0, width: x1 - x0, height: y1 - y0 });
+  }
+  const { data, info } = await src
     .resize({ height: h })
     .raw()
     .toBuffer({ resolveWithObject: true });
