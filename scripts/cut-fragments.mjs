@@ -15,6 +15,14 @@ const OUT = "public/decor/fragments";
 
 const FRAGMENTS = [
   { name: "medusa", from: "trophy", crop: [70, 55, 260, 245], h: 200, vignette: true },
+  // Centrepieces for the fleuron dividers on /projects, one per gap in turn.
+  { name: "medusa-right", from: "trophy", crop: [640, 140, 800, 300], h: 120, vignette: true },
+  { name: "shield-boss", from: "trophy", crop: [690, 660, 830, 800], h: 120, vignette: true },
+  { name: "atlas", from: "vase", crop: [400, 355, 620, 535], h: 120, vignette: true },
+  { name: "plinth-rose", from: "vase", crop: [455, 985, 575, 1085], h: 120, vignette: true },
+  { name: "masks", from: "candelabrum", crop: [140, 955, 330, 1085], h: 120, vignette: true },
+  { name: "griffins", from: "cinerary", crop: [70, 100, 250, 205], h: 120, vignette: true },
+  { name: "ram-capital", from: "candelabrum", crop: [90, 715, 380, 795], h: 100, vignette: true },
 ];
 
 // Burgundy ramp, dark → light (same stops as src/components/texture/Engraving.tsx).
@@ -51,8 +59,8 @@ for (const { name, from, crop, h, vignette } of FRAGMENTS) {
       data[k + 1] = g;
       data[k + 2] = b;
       if (vignette) {
-        // Soft round edge: full inside 70% of the radius, gone at 100%.
-        const d = Math.hypot(x - W / 2, y - H / 2) / (Math.min(W, H) / 2);
+        // Soft oval edge: full inside 70% of the radius, gone at 100%.
+        const d = Math.hypot((x - W / 2) / (W / 2), (y - H / 2) / (H / 2));
         const a = Math.max(0, Math.min(1, (1 - d) / 0.3));
         data[k + 3] = Math.round(data[k + 3] * a);
       }

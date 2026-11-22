@@ -17,10 +17,15 @@ type Project = {
    in the gutter: the picture goes grey and a burgundy wash laid over it
    in "color" blend takes its hue. Pointing at the entry lifts the wash and
    brings the screenshot's own colours back. */
+/* Between entries, a small piece of sculpture cut from the engravings
+   (scripts/cut-fragments.mjs), a different one at each gap. */
+const DIVIDERS = ["medusa-right", "atlas", "griffins", "shield-boss", "masks", "plinth-rose", "ram-capital"];
+
 const PRINTED = "grayscale group-hover:grayscale-0 group-focus-within:grayscale-0 transition-[filter] duration-500";
 
 /** Projects as a catalogue: each entry a numbered plate beside its
-    caption, sides alternating down the page, a fleuron between entries. */
+    caption, sides alternating down the page, a sculpture fragment
+    between entries. */
 export function ProjectsGrid({ projects }: { projects: Project[] }) {
   return (
     <div className="flex flex-col">
@@ -36,9 +41,14 @@ export function ProjectsGrid({ projects }: { projects: Project[] }) {
         return (
           <Fragment key={project._id}>
             {index > 0 && (
-              <div aria-hidden className="my-10 flex items-center gap-4 text-accent/60">
+              <div aria-hidden className="my-10 flex items-center gap-4">
                 <span className="h-[3px] flex-1 border-y border-border" />
-                <span className="text-sm">❦</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/decor/fragments/${DIVIDERS[(index - 1) % DIVIDERS.length]}.webp`}
+                  alt=""
+                  className="h-12 w-auto max-w-none opacity-90 sm:h-14"
+                />
                 <span className="h-[3px] flex-1 border-y border-border" />
               </div>
             )}
